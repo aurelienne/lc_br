@@ -141,8 +141,6 @@ def aggregate_glm_grids(lastdatetime,
       else:
         #if they do exist, just aggregate fields
         try:
-          # AURE 
-          """
           flash_extent_density += flash_extent_density_TMP
           total_energy += total_energy_TMP
           average_area_AGG += average_area_TMP
@@ -150,43 +148,6 @@ def aggregate_glm_grids(lastdatetime,
           flash_centroid_density += flash_centroid_density_TMP
           group_extent_density += group_extent_density_TMP
           group_centroid_density += group_centroid_density_TMP
-          """
-
-          values = np.ma.getdata(flash_extent_density_TMP)
-          print("TMP")
-          #print(len(values[values>0]))
-          print(values[pos][0:20])
-
-          flash_extent_density_PREV = np.copy(flash_extent_density)
-          values2 = np.ma.getdata(flash_extent_density_PREV)
-          print("PREV")
-          #print(len(values2[values2>0]))
-          print(values2[pos][0:20])
-          del flash_extent_density
-          flash_extent_density  = np.fmax(flash_extent_density_TMP, flash_extent_density_PREV)
-
-          values3 = np.ma.getdata(flash_extent_density)
-          print("RESULT")
-          print(values3[pos][0:20])
-          #print(len(values3[values3>0]))
-          c = flash_extent_density[~np.isnan(flash_extent_density)]
-          total_energy_PREV = np.copy(total_energy)
-          total_energy = np.fmax(total_energy_TMP, total_energy_PREV)
-
-          average_area_AGG_PREV = np.copy(average_area_AGG)
-          average_area_AGG = np.fmax(average_area_TMP, average_area_AGG_PREV)
-
-          average_garea_AGG_PREV = np.copy(average_garea_AGG)
-          average_garea_AGG = np.fmax(average_garea_TMP, average_garea_AGG_PREV)
-
-          flash_centroid_density_PREV = np.copy(flash_centroid_density)
-          flash_centroid_density = np.fmax(flash_centroid_density_TMP, flash_centroid_density_PREV)
-
-          group_extent_density_PREV = np.copy(group_extent_density)
-          group_extent_density = np.fmax(group_extent_density_TMP, group_extent_density_PREV)
-
-          group_centroid_density_PREV = np.copy(group_centroid_density)
-          group_centroid_density = np.fmax(group_centroid_density_TMP, group_centroid_density_PREV)
 
           min_flash_area_grids[tt] = nc.variables['minimum_flash_area'][:]
         except ValueError as err:
@@ -316,19 +277,19 @@ def aggregate_glm_grids(lastdatetime,
 
 ############################################################
 input_path = '/ships22/grain/ajorge/data/glm_grids_1min/'
-output_path = '/ships22/grain/ajorge/data/glm_grids_60min/'
-year = 2021
+output_path = '/ships22/grain/ajorge/data/glm_grids_60min_sum/'
+year = 2020
 
 # Summer Period
 #months = [1, 2, 3, 12]
-#days = range(10,24)
-days = range(10,16)
+#days = range(10,25)
+#days = range(10,16)
 months = [sys.argv[1]]
 
 # Other seasons
 #months = [4, 5, 6, 7, 8, 9, 10, 11]
-#days = range(10,19)
-#days = range(10,14)
+#days = range(10,20)
+days = range(10, 14)
 
 start_hour = 19
 end_hour = 22
@@ -340,3 +301,4 @@ for month in months:
             dt_str = dt.strftime('%Y%j%H%M')
             aggregate_glm_grids(dt_str, input_path, accumPeriod=60, outdir=output_path)
             dt += timedelta(minutes=10)
+            sys.exit()

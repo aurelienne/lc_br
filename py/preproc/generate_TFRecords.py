@@ -30,15 +30,13 @@ def create_example(channels):
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
 
-def select_truth_files():
-    #selected_glm = '/home/ajorge/data/glm_filtered.csv'
-    selected_glm = '/home/ajorge/data/glm_filtered2.csv'
-    f = open(selected_glm, 'r')
+def select_truth_files(glm_filtered_list):
+    f = open(glm_filtered_list, 'r')
     filenames = f.readlines()
     return filenames
 
-def get_mean_std():
-    with open('/home/ajorge/data/train_mean_std.csv', 'r') as f:
+def get_mean_std(standard_file):
+    with open(standard_file, 'r') as f:
         lines = f.readlines()[2:]
         for line in lines:
             cols = line.split(',')
@@ -67,24 +65,28 @@ def get_mean_std():
 def standardize_dist(values, mean, std):
     """ Standardize distribution according to full dataset patterns (mean and standard deviation) """
     new_val = (values - float(mean)) * 1.0/float(std)
-    plt.imshow(new_val)
-    plt.colorbar()
-    plt.show()
     return new_val
 
 if __name__ == '__main__':
 
-    glm_path = '/ships22/grain/ajorge/data/glm_grids_60min/agg/'
-    glm_pattern = '%Y%m%d-%H%M00.netcdf'
+    #glm_path = '/ships22/grain/ajorge/data/glm_grids_60min/agg/'
+    glm_path = '/ships22/grain/ajorge/data/glm_grids_60min_sum/agg/'
+    #out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm/test/%Y/%Y%m%d/'
+    out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm_FED5min/%Y/%Y%m%d/'
+
     abi_path = '/arcdata/goes/grb/goes16/%Y/%Y_%m_%d_%j/abi/L1b/RadF/'
+    glm_pattern = '%Y%m%d-%H%M00.netcdf'
     glmvar = "flash_extent_density"
+    
+    #standard_file = '/home/ajorge/lc_br/data/train_mean_std_aure.csv'
+    standard_file = '/home/ajorge/lc_br/data/train_mean_std_LCcontrol.csv'
+    glm_filtered_list = '/home/ajorge/lc_br/data/glm_filtered_60sum_5fde.csv'
 
     sector = 'Full'
     #ltgthresh = 3 #should be in byte-scaled space.
               #We set a minimum threshold of 3 flashes, so that we
               #don't get any patches with very sparse lightning.
 
-    out_path = '/ships22/grain/ajorge/data/tfrecs/%Y/%Y%m%d/'
 
     NY,NX = 2100,2100 # grid size
     ny,nx = 700,700   # patch size
@@ -96,21 +98,15 @@ if __name__ == '__main__':
 
 
     # Load Scalers
-    #scaler_glm = joblib.load(os.path.join(data_path, 'scaler_glm.gz'))
-    #scaler_ch02 = joblib.load(os.path.join(data_path, 'scaler_ch02.gz'))
-    #scaler_ch05 = joblib.load(os.path.join(data_path, 'scaler_ch05.gz'))
-    #scaler_ch13 = joblib.load(os.path.join(data_path, 'scaler_ch13.gz'))
-    #scaler_ch15 = joblib.load(os.path.join(data_path, 'scaler_ch15.gz'))
     glm_mean, glm_std, ch02_mean, ch02_std, ch05_mean, ch05_std, \
-           ch13_mean, ch13_std, ch15_mean, ch15_std = get_mean_std()
+           ch13_mean, ch13_std, ch15_mean, ch15_std = get_mean_std(standard_file)
 
     # Select Truth Files
-    #truth_files = np.sort(glob.glob(glm_path + '/*.netcdf'))
-    truth_files = select_truth_files()
+    truth_files = select_truth_files(glm_filtered_list)
     num_files = len(truth_files)
 
     for truth_file in truth_files:
-        truth_file = truth_file.strip()
+        truth_file = os.path.basename(truth_file.strip())
         
         glmdt = datetime.strptime(truth_file, glm_pattern)
         abidt = glmdt - timedelta(hours=1)
@@ -179,21 +175,13 @@ if __name__ == '__main__':
 
                 with tf.io.TFRecordWriter(outfile) as writer:
                     channels = {}
-                    """
-                    channels['CH02'] = tf.io.serialize_tensor(tf.convert_to_tensor(scaler_ch02.transform(ch02[Y*4:(Y+ny)*4,X*4:(X+nx)*4]), dtype=tf.uint8))
-                    channels['CH05'] = tf.io.serialize_tensor(tf.convert_to_tensor(scaler_ch05.transform(ch05[Y*2:(Y+ny)*2,X*2:(X+nx)*2]), dtype=tf.uint8))
-                    channels['CH13'] = tf.io.serialize_tensor(tf.convert_to_tensor(scaler_ch13.transform(ch13[Y:Y+ny,X:X+nx]), dtype=tf.uint8))
-                    channels['CH15'] = tf.io.serialize_tensor(tf.convert_to_tensor(scaler_ch15.transform(ch15[Y:Y+ny,X:X+nx]), dtype=tf.uint8))
-                    channels['FED_accum_60min_2km'] = tf.io.serialize_tensor(tf.convert_to_tensor(scaler_glm.transform(glm_agg[Y:Y+ny,X:X+nx]), dtype=tf.uint8))
-                    """
 
                     channels['CH02'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(ch02[Y*4:(Y+ny)*4,X*4:(X+nx)*4], ch02_mean, ch02_std), dtype=tf.float32))
                     channels['CH05'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(ch05[Y*2:(Y+ny)*2,X*2:(X+nx)*2], ch05_mean, ch05_std), dtype=tf.float32))
                     channels['CH13'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(ch13[Y:Y+ny,X:X+nx], ch13_mean, ch13_std), dtype=tf.float32))
                     channels['CH15'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(ch15[Y:Y+ny,X:X+nx], ch15_mean, ch15_std), dtype=tf.float32))
-                    channels['FED_accum_60min_2km'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(glm_agg[Y:Y+ny,X:X+nx], glm_mean, glm_std), dtype=tf.float32)) 
-                    print(ch13_mean, ch13_std)
-                    sys.exit()
+                    #channels['FED_accum_60min_2km'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(glm_agg[Y:Y+ny,X:X+nx], glm_mean, glm_std), dtype=tf.float32)) 
+                    channels['FED_accum_60min_2km'] = tf.io.serialize_tensor(tf.convert_to_tensor(glm_agg[Y:Y+ny,X:X+nx], dtype=tf.float32)) # There is no need to standardize GLM, as it will be binarized later
 
                     example = create_example(channels)
                     writer.write(example.SerializeToString())

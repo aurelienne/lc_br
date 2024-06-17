@@ -40,7 +40,8 @@ def make_grid_1min(filename):
     try:
         file2 = glob.glob(input_path + '/' + prefix_file2 + '*')[0]
         file3 = glob.glob(input_path + '/' + prefix_file3 + '*')[0]
-        os.system('python ' + makeGLMgrids_path + ' --fixed_grid --split_events --goes_position east --dx=2.0 --dy=2.0 --ctr_lon=-54.5 --ctr_lat=-14.5 --width="4500.0" --height="4500.0" -o '+ output_path + '/grids/{start_time:%Y/%b/%d}/{dataset_name} ' + file1 + ' ' + file2 + ' ' + file3)
+        #os.system('python ' + makeGLMgrids_path + ' --fixed_grid --split_events --goes_position east --dx=2.0 --dy=2.0 --ctr_lon=-54.5 --ctr_lat=-14.5 --width="4500.0" --height="4500.0" -o '+ output_path + '/grids/{start_time:%Y/%b/%d}/{dataset_name} ' + file1 + ' ' + file2 + ' ' + file3)
+        print('python ' + makeGLMgrids_path + ' --fixed_grid --split_events --goes_position east --dx=2.0 --dy=2.0 --ctr_lon=-54.5 --ctr_lat=-14.5 --width="4500.0" --height="4500.0" -o '+ output_path + '/grids/{start_time:%Y/%b/%d}/{dataset_name} ' + file1 + ' ' + file2 + ' ' + file3)
     except:
         pass
 

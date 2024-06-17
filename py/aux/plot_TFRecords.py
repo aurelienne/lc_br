@@ -12,7 +12,7 @@ tfrec = sys.argv[1]
 NY, NX = 2100, 2100
 ny, nx = 700, 700
 
-figs_path = '/home/ajorge/figs/'
+figs_path = '/home/ajorge/lc_br/figs/'
 
 def parse_tfrecord_fn(example):
     feature_description = {
@@ -51,14 +51,13 @@ def parse_tfrecord_fn(example):
 def inv_transform(values, var):
     """ Invert Standardization of distribution according to full dataset patterns (mean and standard deviation) """
 
-    with open('/home/ajorge/data/train_mean_std.csv', 'r') as f:
+    with open('/home/ajorge/lc_br/data/train_mean_std_aure.csv', 'r') as f:
         lines = f.readlines()[2:]
         for line in lines:
             cols = line.split(',')
             if cols[0] == var:
                 var_mean = float(cols[1])
                 var_std  = float(cols[2])
-                print(var_mean, var_std)
 
     new_val = (values * var_std) + var_mean
     return new_val
@@ -77,8 +76,6 @@ def plot_single_patch():
 
     for features in parsed_dataset.take(1):
 
-        ch13 = inv_transform(features['CH13'].numpy(), 'ch13')
-        print(np.max(ch13), np.min(ch13))
         fig,axes = plt.subplots(nrows=2,ncols=3,figsize=(10, 6))
         for ii,ax in enumerate(axes.ravel()):
             ax.axis('off')
@@ -116,7 +113,7 @@ def plot_entire_grid(ch):
     if ch == 'GLM':
         ch = 'FED_accum_60min_2km'
         var = 'glm'
-        ch_cmap = 'Greys_r'
+        ch_cmap = 'viridis'
     else:
         var = ch.lower()
         if ch == 'CH02' or ch == 'CH05':
@@ -134,14 +131,22 @@ def plot_entire_grid(ch):
     for Y in range(0, NY, ny):
         c = 0
         for X in range(0, NX, nx):
-            filename = glob.glob(os.path.join(tfrec_dir, '*' + tfrec_prefix + '_Y' + str(Y) + '_X'+str(X) + '*'))[0]
+            filename = glob.glob(os.path.join(tfrec_dir, '*' + tfrec_prefix + '_Y' + str(Y).zfill(4) + '_X'+str(X).zfill(4) + '*'))[0]
             print(filename)
             raw_dataset = tf.data.TFRecordDataset(filename)
             parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
             for features in parsed_dataset.take(1):
-                patch_ch15 = inv_transform(features[ch].numpy(), var)
+                print(var)
+                if var != 'glm':
+                    data = inv_transform(features[ch].numpy(), var)
+                else:
+                    data = features[ch].numpy()
+                    data = np.where(data>=1, 1, 0)
 
-            axes[l, c].imshow(patch_ch15, interpolation=None, cmap=plt.get_cmap(ch_cmap))
+                print(np.max(data))
+                print(np.sum(np.nonzero(data)))
+
+            im = axes[l, c].imshow(data, interpolation=None, cmap=plt.get_cmap(ch_cmap))
 
             axes[l, c].get_xaxis().set_visible(False)
             axes[l, c].get_yaxis().set_visible(False)
@@ -149,10 +154,12 @@ def plot_entire_grid(ch):
             c = c + 1
 
         l = l + 1
- 
+
+    cbar_ax = fig.add_axes([0.9, 0.15, 0.05, 0.7])
+    fig.colorbar(im, cax=cbar_ax)
     plt.suptitle(ch)
-    plt.subplots_adjust(wspace=0, hspace=0)
-    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+    #plt.tight_layout()
     plt.savefig(os.path.join(figs_path, 'tfrec_fullgrid_' + ch + '.png'))
     plt.close()
 

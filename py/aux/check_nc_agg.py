@@ -21,22 +21,22 @@ print(num_flashes)
 input_path = '/ships22/grain/ajorge/data/glm_grids_1min/'
 input_path2 = '/ships22/grain/ajorge/data/glm_grids_60min/'
 
-startdt = dt = datetime(2020,1,10,19,1)
-enddt = datetime(2020,1,10,20,0)
+startdt = dt = datetime(2020,1,10,18,1)
+enddt = datetime(2020,1,10,19,1)
 
-ncfile2 = '/ships22/grain/ajorge/data/glm_grids_60min/agg/20200110-190100.netcdf'
+ncfile2 = '/ships22/grain/ajorge/data/glm_grids_60min_sum/agg/20200110-190100.netcdf'
+print(ncfile2)
 ds = xr.open_dataset(ncfile2)
 vals = ds.flash_extent_density.data
-print(len(vals[vals>0]))
-sys.exit()
-print(vals.shape)
+#print(len(vals[vals>0]))
 vals_60min = vals[~np.isnan(vals)]
 print(vals_60min.shape)
 print(np.sum(vals_60min))
+print(" ")
 
+total_sum = 0
 while dt < enddt:
     filepattern = input_path + dt.strftime('%Y/%b/%d/OR_GLM-L2-*s%Y%j%H%M*.nc*')
-    print(filepattern)
     ncfile1 = np.sort(glob.glob(filepattern))
     print(ncfile1[0])
     ds = xr.open_dataset(ncfile1[0])
@@ -45,6 +45,9 @@ while dt < enddt:
     print(np.sum(vals_1min))
     print(len(vals_1min))
     print(vals_1min[0:10])
+    total_sum = total_sum + np.sum(vals_1min)
 
     dt += timedelta(minutes=1)
 
+print("Total:")
+print(total_sum)
