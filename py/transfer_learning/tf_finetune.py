@@ -59,7 +59,8 @@ def get_metrics():
     for jj in range(ntargets):
         for ii in np.arange(0.05,1,0.05):
 
-            met_name = f"csi{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            #met_name = f"csi{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"csi{str(int(round(ii*100))).zfill(2)}"
             csi_met = losses.csi(
                 use_as_loss_function=False,
                 use_soft_discretization=False,
@@ -70,33 +71,38 @@ def get_metrics():
             metrics.append(csi_met)
             custom_metrics[met_name] = csi_met
 
-            met_name = f"pod{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            #met_name = f"pod{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"pod{str(int(round(ii*100))).zfill(2)}"
             pod_met = tf_metrics.pod(
                 use_soft_discretization=False, hard_discretization_threshold=ii, name=met_name, index=jj
             )
             metrics.append(pod_met)
             custom_metrics[met_name] = pod_met
 
-            met_name = f"far{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            #met_name = f"far{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"far{str(int(round(ii*100))).zfill(2)}"
             far_met = tf_metrics.far(
                 use_soft_discretization=False, hard_discretization_threshold=ii, name=met_name, index=jj
             )
             metrics.append(far_met)
             custom_metrics[met_name] = far_met
-
-            met_name = f"obsct{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            """
+            #met_name = f"obsct{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"obsct{str(int(round(ii*100))).zfill(2)}"
             obsct_met = tf_metrics.obs_ct(
                 threshold1=ii-0.05, threshold2=ii, name=met_name, index=jj
             )
             metrics.append(obsct_met)
             custom_metrics[met_name] = obsct_met
 
-            met_name = f"fcstct{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            #met_name = f"fcstct{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"fcstct{str(int(round(ii*100))).zfill(2)}"
             fcstct_met = tf_metrics.fcst_ct(
                 threshold1=ii-0.05, threshold2=ii, name=met_name, index=jj
             )
             metrics.append(fcstct_met)
             custom_metrics[met_name] = fcstct_met
+            """
 
 
     return custom_metrics, metrics
@@ -197,7 +203,7 @@ def prepare_sample(features):
 
   image = tf.image.resize(features['FED_accum_60min_2km'], [ny, nx])
   # Squeeze 3rd dimension (needs to be done here (and not inside parsing function) bacause resize (above) demands a 3-D tensor
-  targetImage_int = tf.reshape(image, [ny,nx])
+  targetImage_int = tf.reshape(image, [ny,nx,1])
 
   # Binarize... A flash count of "1" is scaled to "1". So, we are making
   # anything ≥ 1 to equal 1, and anything less than 1 to equal 0.
@@ -330,16 +336,17 @@ def get_best_model(outdir):
     return best_model
 
 def set_trainable_layers(model):
-    #t = False
-    t = True
+    t = False
+    #t = True
     for layer in model.layers:
         print(layer.name)
-        #if layer.name == layername or layername == "full":
-        if layer.name == 'conv2d_transpose_3':
+        if layer.name == layername or layername == "full":
             t = True
+        #if layer.name == 'conv2d_transpose_3':
+        #    t = True
         layer.trainable = t
-        if layer.name == 'max_pooling2d':
-            t = False
+        #if layer.name == 'max_pooling2d':
+        #    t = False
     return model
 
 
@@ -394,14 +401,16 @@ def train():
         print("Number of devices: {}".format(strategy.num_replicas_in_sync))
         with strategy.scope():
             custom_objs, metrics = get_metrics()
-            conv_model = load_model(input_model, custom_objects=custom_objs, compile=False)
+            conv_model_squeeze = load_model(input_model, custom_objects=custom_objs, compile=False)
+            conv_model = Model(conv_model_squeeze.input, conv_model_squeeze.layers[-2].output)
             conv_model = set_trainable_layers(conv_model)
             #conv_model.trainable = True
             # Compile the Model
             conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-4),metrics=metrics)
     else:
         custom_objs, metrics = get_metrics()
-        conv_model = load_model(input_model, custom_objects=custom_objs, compile=False)
+        conv_model_squeeze = load_model(input_model, custom_objects=custom_objs, compile=False)
+        conv_model = Model(conv_model_squeeze.input, conv_model_squeeze.layers[-2].output)
         conv_model = set_trainable_layers(conv_model)
         #conv_model.trainable = True
         # Compile the Model

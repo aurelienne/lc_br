@@ -151,7 +151,8 @@ def get_metrics():
     for jj in range(ntargets):
         for ii in np.arange(0.05,1,0.05):
     
-            met_name = f"csi{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            #met_name = f"csi{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"csi{str(int(round(ii*100))).zfill(2)}"
             csi_met = losses.csi(
                 use_as_loss_function=False,
                 use_soft_discretization=False,
@@ -162,14 +163,16 @@ def get_metrics():
             metrics.append(csi_met)
             custom_metrics[met_name] = csi_met
     
-            met_name = f"pod{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            #met_name = f"pod{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"pod{str(int(round(ii*100))).zfill(2)}"
             pod_met = tf_metrics.pod(
                 use_soft_discretization=False, hard_discretization_threshold=ii, name=met_name, index=jj
             )
             metrics.append(pod_met)
             custom_metrics[met_name] = pod_met
     
-            met_name = f"far{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            #met_name = f"far{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"far{str(int(round(ii*100))).zfill(2)}"
             far_met = tf_metrics.far(
                 use_soft_discretization=False, hard_discretization_threshold=ii, name=met_name, index=jj
             )
@@ -290,10 +293,11 @@ def training_history_figs(history,outdir):
     # summarize history for accuracy
     try:
         plt.plot(history['binary_accuracy'])
-        if('val_binary_accuracy' in history): plt.plot(history['val_binary_accuracy'])
-        plt.title('model binary accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
+        if('val_binary_accuracy' in history): 
+            plt.plot(history['val_binary_accuracy'])
+            plt.title('model binary accuracy')
+            plt.ylabel('accuracy')
+            plt.xlabel('epoch')
         if('val_binary_accuracy' in history):
             plt.legend(['train', 'val'], loc='upper left')
         else:
@@ -313,6 +317,21 @@ def training_history_figs(history,outdir):
             plt.legend(['train'], loc='upper left')
         plt.savefig(os.path.join(outdir,'accuracy_history.png'))
         plt.close()
+
+    # summarize history for loss
+    plt.plot(history['loss'])
+    if('val_loss' in history): 
+        plt.plot(history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+    if('val_loss' in history):
+        plt.legend(['train', 'val'], loc='upper left')
+    else:
+        plt.legend(['train'], loc='upper left')
+    plt.savefig(os.path.join(outdir,'loss_history.png'))
+    plt.close()
+
 
 ################################################################################################################
 ## MAIN ##

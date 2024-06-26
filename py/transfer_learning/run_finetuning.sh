@@ -34,4 +34,4 @@ modeldir=/ships22/grain/probsevere/LC/tests/2019-2020/c02051315_poswt5/
 
 # Run script
 #/usr/bin/time -v
-singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/.local --nv $CONTAINER python tf_finetune.py -l full -o /home/ajorge/output/train/fine_tune/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/.local --nv $CONTAINER python tf_finetune.py -l conv2d_16 -o /home/ajorge/lc_br/data/results/fine_tune/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/

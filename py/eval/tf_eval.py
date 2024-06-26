@@ -291,6 +291,11 @@ def parse_tfrecord_control(example):
     one = tf.ones_like(fed_accum)
     targets = tf.where(fed_accum >= BINARIZE, x=one, y=zero)
 
+    print(features['input_1'].shape)
+    print(features['input_2'].shape)
+    print(features['input_3'].shape)
+    print(targets.shape)
+
     return (features, targets)
 
 
@@ -366,8 +371,8 @@ parse_fn = parse_tfrecord_control
 # Create the test dataset for running the permutation
 sat = "goes16"
 year = "2021"
-#inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/test/{year}/"
-inroot = f"/ships22/grain/probsevere/LC/tfrecs3/goes16/{year}"
+inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/test/{year}/"
+#inroot = f"/ships22/grain/probsevere/LC/tfrecs3/goes16/{year}"
 
 # leave empty if you only want one run
 #subdirs = ['01','02','03','04','09','10','11','12']
@@ -378,7 +383,7 @@ if len(subdirs) > 0:
     for sub in subdirs:
         val_lists.append(f"{inroot}/{year}{sub}*/*tfrec")
 else:
-    val_lists = [f"{inroot}/20210620/*.tfrec"]  # this is your "one-run" case
+    val_lists = [f"{inroot}/20210115/*.tfrec"]  # this is your "one-run" case
 
 for ii, val_list in enumerate(val_lists):
     test_filenames = sorted(glob.glob(val_list))  # sort to ensure reproducibility

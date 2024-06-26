@@ -151,7 +151,7 @@ def get_metrics():
     for jj in range(ntargets):
         for ii in np.arange(0.05,1,0.05):
     
-            met_name = f"csi{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"csi{str(int(round(ii*100))).zfill(2)}"
             csi_met = losses.csi(
                 use_as_loss_function=False,
                 use_soft_discretization=False,
@@ -162,14 +162,14 @@ def get_metrics():
             metrics.append(csi_met)
             custom_metrics[met_name] = csi_met
     
-            met_name = f"pod{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"pod{str(int(round(ii*100))).zfill(2)}"
             pod_met = tf_metrics.pod(
                 use_soft_discretization=False, hard_discretization_threshold=ii, name=met_name, index=jj
             )
             metrics.append(pod_met)
             custom_metrics[met_name] = pod_met
     
-            met_name = f"far{str(int(round(ii*100))).zfill(2)}_index{jj}"
+            met_name = f"far{str(int(round(ii*100))).zfill(2)}"
             far_met = tf_metrics.far(
                 use_soft_discretization=False, hard_discretization_threshold=ii, name=met_name, index=jj
             )
@@ -354,7 +354,7 @@ print(base_model.summary())
 AUTOTUNE = tf.data.AUTOTUNE
 
 # Training Dataset
-train_filenames = glob.glob(train_dir + "/*/*.tfrec", recursive=True)
+train_filenames = glob.glob(train_dir + "/202001*/*.tfrec", recursive=True)
 n_samples = len(train_filenames)
 print("\nNumber of training samples:", n_samples, "\n")
 train_ds = (tf.data.TFRecordDataset(train_filenames, num_parallel_reads=AUTOTUNE)
@@ -365,7 +365,7 @@ train_ds = (tf.data.TFRecordDataset(train_filenames, num_parallel_reads=AUTOTUNE
 )
 
 # Validation Dataset
-val_filenames = glob.glob(val_dir + "/*/*.tfrec", recursive=True)
+val_filenames = glob.glob(val_dir + "/202001*/*.tfrec", recursive=True)
 n_vsamples = len(val_filenames)
 print("\nNumber of validation samples:", n_vsamples, "\n")
 val_ds = (tf.data.TFRecordDataset(val_filenames, num_parallel_reads=AUTOTUNE)
@@ -403,12 +403,12 @@ val_outdir = os.path.join(outdir, 'val')
 
 # Appending Layers to the Base Model
 base_model.trainable = False
-conv = tf.keras.layers.Conv2D(16, (3,3), padding='same', name='conv2D_16', activation='linear')(base_model.output)
+conv = tf.keras.layers.Conv2D(16, (3,3), padding='same', name='conv2D_16')(base_model.output)
 conv = tf.keras.layers.Activation('relu', name='Activation_16')(conv)
-conv = tf.keras.layers.Conv2D(16, (3,3), padding='same', name='conv2D_17', activation='linear')(conv)
+conv = tf.keras.layers.Conv2D(16, (3,3), padding='same', name='conv2D_17')(conv)
 #conv = tf.keras.layers.BatchNormalization()(conv)
 conv = tf.keras.layers.Activation('relu', name='Activation_17')(conv)
-conv = tf.keras.layers.Conv2D(1, (1,1), padding='valid',  name='conv2D_18', activation='linear', bias_initializer='zeros')(conv)
+conv = tf.keras.layers.Conv2D(1, (1,1), padding='valid',  name='conv2D_18', bias_initializer='zeros')(conv)
 conv = tf.keras.layers.Activation('sigmoid', name='Activation_18')(conv)
 pool_2d_layer = tf.keras.layers.MaxPool2D(pool_size=(4, 4), strides=None, name="MaxPool_Output")(conv)
 pool_2d_layer._name = "MaxPool_Output"
