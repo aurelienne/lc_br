@@ -138,6 +138,7 @@ def aggregate_glm_grids(
             ts_dt = curr_dt
 
         filepattern = datadir + curr_dt.strftime("%Y/%b/%d/OR_GLM-L2-*e%Y%j%H%M*.nc*")
+        print(filepattern)
 
         ncfile = np.sort(glob(filepattern))
         if len(ncfile):

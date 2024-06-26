@@ -71,8 +71,8 @@ if __name__ == '__main__':
 
     #glm_path = '/ships22/grain/ajorge/data/glm_grids_60min/agg/'
     glm_path = '/ships22/grain/ajorge/data/glm_grids_60min_sum/agg/'
+    out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm/train/%Y/%Y%m%d/'
     #out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm/test/%Y/%Y%m%d/'
-    out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm_FED5min/%Y/%Y%m%d/'
 
     abi_path = '/arcdata/goes/grb/goes16/%Y/%Y_%m_%d_%j/abi/L1b/RadF/'
     glm_pattern = '%Y%m%d-%H%M00.netcdf'
@@ -80,7 +80,8 @@ if __name__ == '__main__':
     
     #standard_file = '/home/ajorge/lc_br/data/train_mean_std_aure.csv'
     standard_file = '/home/ajorge/lc_br/data/train_mean_std_LCcontrol.csv'
-    glm_filtered_list = '/home/ajorge/lc_br/data/glm_filtered_60sum_5fde.csv'
+    glm_filtered_list = '/home/ajorge/lc_br/data/glm_filtered_sumglm.csv'
+    #glm_filtered_list = '/home/ajorge/lc_br/data/glm_filtered_sumglm_2021.csv'
 
     sector = 'Full'
     #ltgthresh = 3 #should be in byte-scaled space.
@@ -91,11 +92,12 @@ if __name__ == '__main__':
     NY,NX = 2100,2100 # grid size
     ny,nx = 700,700   # patch size
     Y_glm, X_glm = 0, 0
-    Y_ch02, X_ch02 = 9503, 10709
-    Y_ch05, X_ch05 = 4753, 5300
-    Y_ch13, X_ch13 = 2365, 2681
+    #Y_ch02, X_ch02 = 9503, 10709
+    #Y_ch05, X_ch05 = 4753, 5300
+    Y_ch13, X_ch13 = 2365, 2646
     Y_ch15, X_ch15 = Y_ch13, X_ch13
-
+    Y_ch02, X_ch02 = Y_ch13*4, X_ch13*4
+    Y_ch05, X_ch05 = Y_ch13*2, X_ch13*2
 
     # Load Scalers
     glm_mean, glm_std, ch02_mean, ch02_std, ch05_mean, ch05_std, \

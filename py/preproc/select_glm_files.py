@@ -81,6 +81,6 @@ def create_dataframe(min_percent=0, max_percent=100, min_flashes=0):
 if __name__ == "__main__":
     input_path = sys.argv[1]
     pattern_list = '2020*.netcdf'
-    outfile = 'glm_filtered_60sum_5fde.csv'
+    outfile = 'glm_filtered_60sum_5fde_nocorrect.csv'
     write_csv()
     create_dataframe(min_percent=2, max_percent=10, min_flashes=3)
