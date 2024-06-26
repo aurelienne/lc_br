@@ -51,7 +51,8 @@ def parse_tfrecord_fn(example):
 def inv_transform(values, var):
     """ Invert Standardization of distribution according to full dataset patterns (mean and standard deviation) """
 
-    with open('/home/ajorge/lc_br/data/train_mean_std_aure.csv', 'r') as f:
+    #with open('/home/ajorge/lc_br/data/train_mean_std_aure.csv', 'r') as f:
+    with open('/home/ajorge/lc_br/data/train_mean_std_LCcontrol.csv', 'r') as f:
         lines = f.readlines()[2:]
         for line in lines:
             cols = line.split(',')
@@ -96,7 +97,7 @@ def plot_single_patch():
                 plt.colorbar(im,ax=ax,orientation='horizontal',pad=0.03)
                 ax.set_title('CH15 brightness temperature')
             elif(ii==5):
-                im = ax.imshow(inv_transform(features['FED_accum_60min_2km'].numpy(), 'glm'), interpolation='none')
+                im = ax.imshow(features['FED_accum_60min_2km'].numpy(), interpolation='none')
                 plt.colorbar(im,ax=ax,orientation='horizontal',pad=0.03)
                 ax.set_title('Flash-extent density 60-min accumulation')
 
@@ -131,7 +132,8 @@ def plot_entire_grid(ch):
     for Y in range(0, NY, ny):
         c = 0
         for X in range(0, NX, nx):
-            filename = glob.glob(os.path.join(tfrec_dir, '*' + tfrec_prefix + '_Y' + str(Y).zfill(4) + '_X'+str(X).zfill(4) + '*'))[0]
+            #filename = glob.glob(os.path.join(tfrec_dir, '*' + tfrec_prefix + '_Y' + str(Y).zfill(4) + '_X'+str(X).zfill(4) + '*'))[0]
+            filename = glob.glob(os.path.join(tfrec_dir, '*' + tfrec_prefix + '_Y' + str(Y) + '_X'+str(X) + '*'))[0]
             print(filename)
             raw_dataset = tf.data.TFRecordDataset(filename)
             parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
