@@ -28,7 +28,7 @@ config.read(config_file)
 glm_path = config['PATHS']['glm_path']
 temp_path = config['PATHS']['temp_path']
 #output_path = config['PATHS']['output_path']
-output_path = "/ships22/grain/ajorge/data/glm_grids_5min/"
+output_path = "/ships22/grain/ajorge/data/glm_grids_1min/"
 makeGLMgrids_path =  config['PATHS']['makeGLMgrids_path']
 
 
