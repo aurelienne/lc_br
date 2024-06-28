@@ -17,7 +17,7 @@ from lightningcast import losses
 from lightningcast import tf_metrics
 import argparse
 
-input_model = '/home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5'
+#input_model = '/home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5'
 NY, NX = 2100, 2100
 ny, nx = 700, 700
 NGPU = 2
@@ -199,11 +199,11 @@ def prepare_sample(features):
   ABI predictor data for this sample. We set up the inputs dict appropriately
   for how the model expects the data (i.e., three inputs).
   '''
-  nx, ny = 480, 480
+  #nx, ny = 480, 480
 
-  image = tf.image.resize(features['FED_accum_60min_2km'], [ny, nx])
+  #image = tf.image.resize(features['FED_accum_60min_2km'], [ny, nx])
   # Squeeze 3rd dimension (needs to be done here (and not inside parsing function) bacause resize (above) demands a 3-D tensor
-  targetImage_int = tf.reshape(image, [ny,nx,1])
+  targetImage_int = features['FED_accum_60min_2km']
 
   # Binarize... A flash count of "1" is scaled to "1". So, we are making
   # anything ≥ 1 to equal 1, and anything less than 1 to equal 0.
@@ -213,10 +213,14 @@ def prepare_sample(features):
 
   inputs = {}
 
-  inputs['input_1'] = tf.image.resize(features['CH02'], [ny*4, nx*4])
-  inputs['input_2'] = tf.image.resize(features['CH05'], [ny*2, nx*2])
-  ch13 = tf.image.resize(features['CH13'], [ny, nx])
-  ch15 = tf.image.resize(features['CH15'], [ny, nx])
+  #inputs['input_1'] = tf.image.resize(features['CH02'], [ny*4, nx*4])
+  #inputs['input_2'] = tf.image.resize(features['CH05'], [ny*2, nx*2])
+  #ch13 = tf.image.resize(features['CH13'], [ny, nx])
+  #ch15 = tf.image.resize(features['CH15'], [ny, nx])
+  inputs['input_1'] = features['CH02']
+  inputs['input_2'] = features['CH05']
+  ch13 = features['CH13']
+  ch15 = features['CH15']
   inputs['input_3'] = tf.concat([ch13,ch15], axis=2)
 
   return inputs, targetImage
@@ -336,17 +340,25 @@ def get_best_model(outdir):
     return best_model
 
 def set_trainable_layers(model):
-    t = False
-    #t = True
-    for layer in model.layers:
-        print(layer.name)
-        if layer.name == layername or layername == "full":
-            t = True
-        #if layer.name == 'conv2d_transpose_3':
-        #    t = True
-        layer.trainable = t
-        #if layer.name == 'max_pooling2d':
-        #    t = False
+    global layername
+    
+    # Unfreeze first encoder block and last decoder block
+    if layername == '1stEnc_LastDec':
+        t = True
+        for layer in model.layers:
+            print(layer.name)
+            if layer.name == 'conv2d_transpose_3':
+                t = True
+            layer.trainable = t
+            if layer.name == 'max_pooling2d':
+                t = False
+    else:
+        t = False
+        for layer in model.layers:
+            if layer.name == layername or layername == "full":
+                t = True
+            layer.trainable = t
+
     return model
 
 
@@ -356,8 +368,8 @@ def train():
     AUTOTUNE=tf.data.AUTOTUNE
 
     ##train_filenames = tf.io.gfile.glob(train_dir + "/*.tfrec")
-    #train_filenames = glob.glob(train_dir + "/**/*.tfrec", recursive=True)
-    train_filenames = glob.glob(train_dir + "/202001*/*.tfrec", recursive=True)
+    train_filenames = glob.glob(train_dir + "/**/*.tfrec", recursive=True)
+    #train_filenames = glob.glob(train_dir + "/202001*/*.tfrec", recursive=True)
     n_tsamples = len(train_filenames)
     train_ds = (tf.data.TFRecordDataset(train_filenames, num_parallel_reads=AUTOTUNE)
                .shuffle(10)
@@ -373,8 +385,8 @@ def train():
     print('\nBuilding validation Dataset')
 
     #val_filenames = tf.io.gfile.glob(val_dir + "/*.tfrec")
-    #val_filenames = glob.glob(val_dir + "/**/*.tfrec", recursive=True)
-    val_filenames = glob.glob(val_dir + "/202001*/*.tfrec", recursive=True)
+    val_filenames = glob.glob(val_dir + "/**/*.tfrec", recursive=True)
+    #val_filenames = glob.glob(val_dir + "/202001*/*.tfrec", recursive=True)
     print(val_filenames)
     n_vsamples = len(val_filenames)
     val_ds = (tf.data.TFRecordDataset(val_filenames, num_parallel_reads=AUTOTUNE)
@@ -386,7 +398,7 @@ def train():
 
     # Callbacks
     csvlogger = CSVLogger(f"{outdir}/log.csv", append=True)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=4) # If no improvement after {patience} epochs, the stop early
+    early_stopping = EarlyStopping(monitor='val_loss', patience=3) # If no improvement after {patience} epochs, the stop early
     mcp_save = ModelCheckpoint(os.path.join(outdir,'model-{epoch:02d}-{val_loss:03f}.h5'),save_best_only=True, monitor='val_loss', mode='min')
     reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', cooldown=1, verbose=1, min_delta=0.00001,factor=0.1, patience=2, mode='min')
     callbacks = [early_stopping, mcp_save, reduce_lr_loss, csvlogger]
@@ -401,20 +413,28 @@ def train():
         print("Number of devices: {}".format(strategy.num_replicas_in_sync))
         with strategy.scope():
             custom_objs, metrics = get_metrics()
-            conv_model_squeeze = load_model(input_model, custom_objects=custom_objs, compile=False)
-            conv_model = Model(conv_model_squeeze.input, conv_model_squeeze.layers[-2].output)
+
+            if os.path.basename(input_model) == 'fit_conv_model.h5':
+                conv_model_squeeze = load_model(input_model, custom_objects=custom_objs, compile=False)
+                conv_model = Model(conv_model_squeeze.input, conv_model_squeeze.layers[-2].output)
+            else:
+                conv_model = load_model(input_model, custom_objects=custom_objs, compile=False)
+
             conv_model = set_trainable_layers(conv_model)
             #conv_model.trainable = True
             # Compile the Model
-            conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-4),metrics=metrics)
+            conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
     else:
         custom_objs, metrics = get_metrics()
-        conv_model_squeeze = load_model(input_model, custom_objects=custom_objs, compile=False)
-        conv_model = Model(conv_model_squeeze.input, conv_model_squeeze.layers[-2].output)
+        if os.path.basename(input_model) == 'fit_conv_model.h5':
+            conv_model_squeeze = load_model(input_model, custom_objects=custom_objs, compile=False)
+            conv_model = Model(conv_model_squeeze.input, conv_model_squeeze.layers[-2].output)
+        else:
+            conv_model = load_model(input_model, custom_objects=custom_objs, compile=False)
         conv_model = set_trainable_layers(conv_model)
         #conv_model.trainable = True
         # Compile the Model
-        conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-4),metrics=metrics)
+        conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
         
     print(conv_model.summary(show_trainable=True))
 
@@ -468,9 +488,17 @@ def train():
 #-----------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    print("Fine-Tuning...")
     parse_desc = """Fine-Tune LightningCast to a new dataset"""
 
     parser = argparse.ArgumentParser(description=parse_desc)
+    parser.add_argument(
+        "-m", "--model_file",
+        help="Pre-trained model to be loaded.",
+        type=str,
+        nargs=1,
+        required=True,
+    )
     parser.add_argument(
         "-l", "--layer_name",
         help="Layer name from which the fine tuning process starts (All layers before will be kept frozen). Set 'full' to train the entire model.",
@@ -498,6 +526,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    input_model = args.model_file[0]
+    print("Model: "+input_model)
     layername = args.layer_name[0]
     train_dir = args.train_datadir[0]
     val_dir = args.val_datadir[0]
@@ -507,7 +537,7 @@ if __name__ == "__main__":
         outdir = args.outdir[0]
 
 
-    BATCHSIZE = 2
+    BATCHSIZE = 4
 
     outdir = os.path.join(outdir, layername)
     pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)

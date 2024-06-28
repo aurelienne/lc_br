@@ -59,9 +59,9 @@ indir = args.indir[0]
 
 config = pickle.load(open(os.path.join(indir, "model_config.pkl"), "rb"))
 model_file = args.model[0] if (args.model) else f"{indir}/fit_conv_model.h5"
+print('Model:' + model_file)
 
 outdir = args.outdir[0] if (args.outdir) else os.path.join(indir, "TEST")
-
 
 ncpus = args.ncpus[0]
 
@@ -307,20 +307,23 @@ def spatial_eval(test_ds, outdir):
     ##preallocate
     #stride = 4
     stride = 7
-    all_preds = np.empty((n_samples,ny//stride,nx//stride),dtype=np.float32) #Striding to save space and time.
-    #all_labels = np.zeros((n_samples,ny//stride,nx//stride),dtype=np.byte)
-    all_labels = np.zeros((n_samples,ny//stride,nx//stride),dtype=np.float32)
+    all_preds = np.empty((n_samples,ny//stride,nx//stride),dtype=np.float16) #Striding to save space and time.
+    all_labels = np.zeros((n_samples,ny//stride,nx//stride),dtype=np.byte)
+    #all_labels = np.zeros((n_samples,ny//stride,nx//stride),dtype=np.float32)
     ##float32 precision needed for validation routines (e.g., MSE)
     #
     cter = 0
     for inputs,labels in test_ds:
         preds = conv_model.predict(inputs)
+        if preds.ndim == 4:
+            preds = np.squeeze(preds)
         batchsize = preds.shape[0]
         if cter+batchsize >= n_samples:
             batchsize = n_samples - cter 
         all_preds[cter:cter+batchsize] = preds[:batchsize,::stride,::stride]
         all_labels[cter:cter+batchsize] = labels[:batchsize,::stride,::stride]
         cter+=batchsize
+        del preds,labels
 
     basenames = [os.path.basename(vf) for vf in test_filenames]
     datetimes = [datetime.strptime(x.split('_')[1],'%Y%m%d-%H%M%S') for x in basenames]
@@ -335,7 +338,7 @@ def spatial_eval(test_ds, outdir):
                         'midptX':midptX, 'midptY':midptY,
                         'strideX':strideX, 'strideY':strideY, 'stride':stride}
     pickle.dump(preds_labs_dict1, open(f"{outdir}/all_preds_labs.pkl","wb"))
-    del test_ds, preds, all_preds, all_labels, preds_labs_dict1
+    del test_ds, all_preds, all_labels, preds_labs_dict1
 
 
 ################################################################################################################
@@ -350,12 +353,12 @@ if NGPU > 1:
         custom_objs, metrics = get_metrics()
         conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
         conv_model.compile(
-            optimizer=optimizer, loss=config["loss_fcn"], metrics=metrics
+            optimizer=optimizer, loss="binary_crossentropy", metrics=metrics
         )
 else:
     custom_objs, metrics = get_metrics()
     conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
-    conv_model.compile(optimizer=optimizer, loss=config["loss_fcn"], metrics=metrics)
+    conv_model.compile(optimizer=optimizer, loss="binary_crossentropy", metrics=metrics)
 
 print(conv_model.summary())
 #for layer in conv_model.layers:
@@ -372,18 +375,19 @@ parse_fn = parse_tfrecord_control
 sat = "goes16"
 year = "2021"
 inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/test/{year}/"
+#inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/train/{year}/"
 #inroot = f"/ships22/grain/probsevere/LC/tfrecs3/goes16/{year}"
 
 # leave empty if you only want one run
 #subdirs = ['01','02','03','04','09','10','11','12']
-subdirs = ['01']
+subdirs = ['01', '02','03','04','09', '10', '11','12']
 
 if len(subdirs) > 0:
     val_lists = []
     for sub in subdirs:
         val_lists.append(f"{inroot}/{year}{sub}*/*tfrec")
 else:
-    val_lists = [f"{inroot}/20210115/*.tfrec"]  # this is your "one-run" case
+    val_lists = [f"{inroot}/*/*.tfrec"]  # this is your "one-run" case
 
 for ii, val_list in enumerate(val_lists):
     test_filenames = sorted(glob.glob(val_list))  # sort to ensure reproducibility
@@ -424,6 +428,7 @@ for ii, val_list in enumerate(val_lists):
     eval_results = conv_model.evaluate(test_ds)
     
     # Plot prediction Sample
+    """
     preds = conv_model.predict(test_ds)
     fig,axes = plt.subplots(nrows=3,ncols=3, gridspec_kw = {'wspace':0, 'hspace':0},figsize=(9,9))
     i = 0
@@ -443,6 +448,7 @@ for ii, val_list in enumerate(val_lists):
     #plt.tight_layout()
     plt.savefig('/home/ajorge/output/sample_pred.png')
     plt.close()
+    """
 
     cter = 0
     dict_results = collections.OrderedDict(

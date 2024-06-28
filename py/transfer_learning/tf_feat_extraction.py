@@ -89,11 +89,6 @@ from lightningcast import losses
 from lightningcast import tf_metrics
 import tensorflow_addons as tfa
 
-optimizer = (
-    tfa.optimizers.AdaBelief(learning_rate=0.0001)
-    if (config["optimizer"].lower() == "adabelief")
-    else "Adam"
-)
 
 if ncpus > 0:
     # limiting CPUs
@@ -332,6 +327,74 @@ def training_history_figs(history,outdir):
             plt.legend(['train'], loc='upper left')
             plt.savefig(os.path.join(outdir,'loss_history.png'))
 
+def add_scores_to_file(outdir,scores={'val_aupr':{'best_score':0},'val_brier_score':{'best_score':1}}):
+  '''
+  Will append to {outdir}/verification_scores.txt or create it if it does not exist.
+  If scores['score']['best_score'] = 0, then "higher_is_better" = True.
+  If scores['score']['best_score'] = 1, then "higher_is_better" = False (i.e., lower is better).
+  '''
+
+  of = open(f'{outdir}/log.csv', 'r')
+  lines = of.readlines()
+  of.close()
+
+  for ii,line in enumerate(lines):
+    parts = line.split(',')
+    if(ii == 0): #first line
+      #for score in scores:
+      for score in list(scores):
+        try:
+          scores[score]['idx'] = parts.index(score) #set the score index
+        except ValueError:
+          del scores[score]  #remove score if it doesn't exist in the log.csv
+        else:
+          #set 'best_epoch' to initial epoch and if higher or lower is better
+          scores[score]['best_epoch'] = 0
+          if(scores[score]['best_score'] == 1): #indicates lower is better
+            scores[score]['higher_is_better'] = False
+          else:
+            scores[score]['higher_is_better'] = True
+    else: #All other lines
+      for score in scores:
+        idx = scores[score]['idx']
+        best_val_score = scores[score]['best_score']
+        val_score = float(parts[idx]) #the validation metric for this epoch
+        if(scores[score]['higher_is_better']):
+          if(val_score > best_val_score):
+            scores[score]['best_score'] = val_score
+            scores[score]['best_epoch'] = int(parts[0]) + 1
+        else: #lower is better
+          if(val_score < best_val_score):
+            scores[score]['best_score'] = val_score
+            scores[score]['best_epoch'] = int(parts[0]) + 1
+
+  of = open(f'{outdir}/verification_scores.txt','a')
+  for score in scores:
+    best_score = scores[score]['best_score']
+    best_epoch = scores[score]['best_epoch']
+    of.write(f'Best {score}: {np.round(best_score,5)}; at epoch {best_epoch}\n')
+  of.close()
+
+def get_best_model(outdir):
+
+  best_model = 'foo'; best_loss = 999999
+
+  models = glob.glob(f"{outdir}/model-*.h5")
+  for mod in models:
+    loss = float(os.path.basename(mod).split('-')[-1].split('.h5')[0])
+    if(loss < best_loss):
+      best_loss = loss
+      best_model = mod
+
+  if(best_model == 'foo'):
+    print("Couldn't find best model. Returning last model.")
+    try:
+      return np.sort(models)[-1]
+    except IndexError:
+      raise
+  else:
+    return best_model
+
 ################################################################################################################
 ## MAIN ##
 
@@ -354,7 +417,7 @@ print(base_model.summary())
 AUTOTUNE = tf.data.AUTOTUNE
 
 # Training Dataset
-train_filenames = glob.glob(train_dir + "/202001*/*.tfrec", recursive=True)
+train_filenames = glob.glob(train_dir + "/*/*.tfrec", recursive=True)
 n_samples = len(train_filenames)
 print("\nNumber of training samples:", n_samples, "\n")
 train_ds = (tf.data.TFRecordDataset(train_filenames, num_parallel_reads=AUTOTUNE)
@@ -365,7 +428,7 @@ train_ds = (tf.data.TFRecordDataset(train_filenames, num_parallel_reads=AUTOTUNE
 )
 
 # Validation Dataset
-val_filenames = glob.glob(val_dir + "/202001*/*.tfrec", recursive=True)
+val_filenames = glob.glob(val_dir + "/*/*.tfrec", recursive=True)
 n_vsamples = len(val_filenames)
 print("\nNumber of validation samples:", n_vsamples, "\n")
 val_ds = (tf.data.TFRecordDataset(val_filenames, num_parallel_reads=AUTOTUNE)
@@ -414,13 +477,14 @@ pool_2d_layer = tf.keras.layers.MaxPool2D(pool_size=(4, 4), strides=None, name="
 pool_2d_layer._name = "MaxPool_Output"
 new_model = tf.keras.Model(base_model.input, pool_2d_layer)
 custom_objs, metrics = get_metrics()
-optimizer=Adam(learning_rate=1e-4)
-#optimizer = RMSprop(lr=2e-5)
+#optimizer=Adam(learning_rate=1e-4)
+optimizer = RMSprop(lr=2e-5)
+print("Optimizer: "+str(optimizer))
 new_model.compile(optimizer=optimizer, loss="binary_crossentropy", metrics=metrics)
 print(new_model.summary(show_trainable=True))
 
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=4) # If no improvement after {patience} epochs, the stop early
+early_stopping = EarlyStopping(monitor='val_loss', patience=3) # If no improvement after {patience} epochs, the stop early
 mcp_save = ModelCheckpoint(os.path.join(outdir,'model-{epoch:02d}-{val_loss:03f}.h5'),save_best_only=True, monitor='val_loss', mode='min')
 reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', cooldown=1, verbose=1, min_delta=0.00001,factor=0.1, patience=2, mode='min')
 callbacks = [early_stopping, mcp_save, reduce_lr_loss] #, csvlogger]
@@ -431,3 +495,24 @@ history = new_model.fit(train_ds,
           callbacks=callbacks)
 
 training_history_figs(history.history,outdir)
+
+# Delete objects in RAM
+del train_ds, val_ds, history
+
+# Create scores file
+scores = {}
+scores['val_aupr'] = {'best_score':0}
+scores['val_brier_score'] = {'best_score':1}
+scores['val_csi05'] = {'best_score':0}
+scores['val_csi10'] = {'best_score':0}
+scores['val_csi15'] = {'best_score':0}
+scores['val_csi20'] = {'best_score':0}
+scores['val_csi25'] = {'best_score':0}
+scores['val_csi30'] = {'best_score':0}
+scores['val_csi35'] = {'best_score':0}
+scores['val_csi40'] = {'best_score':0}
+scores['val_csi45'] = {'best_score':0}
+scores['val_csi50'] = {'best_score':0}
+
+add_scores_to_file(outdir,scores=scores)
+
