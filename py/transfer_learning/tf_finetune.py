@@ -223,7 +223,13 @@ def prepare_sample(features):
   ch15 = features['CH15']
   inputs['input_3'] = tf.concat([ch13,ch15], axis=2)
 
-  return inputs, targetImage
+  if POS_WEIGHT > 0: #multiplier of the positive class
+      class_weight = tf.multiply(one, POS_WEIGHT) 
+      sample_weights = tf.where(targetImage_int >= 1, x=class_weight, y=one)
+      return inputs, targetImage, sample_weights
+  else:
+      return inputs, targetImage
+
 #-----------------------------------------------------------------------------------------------
 def training_history_figs(history,outdir):
   '''
@@ -423,7 +429,10 @@ def train():
             conv_model = set_trainable_layers(conv_model)
             #conv_model.trainable = True
             # Compile the Model
-            conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
+            if POS_WEIGHT > 0:
+                conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),weighted_metrics=metrics)
+            else:
+                conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
     else:
         custom_objs, metrics = get_metrics()
         if os.path.basename(input_model) == 'fit_conv_model.h5':
@@ -434,7 +443,10 @@ def train():
         conv_model = set_trainable_layers(conv_model)
         #conv_model.trainable = True
         # Compile the Model
-        conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
+        if POS_WEIGHT > 0:
+            conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),weighted_metrics=metrics)
+        else:
+            conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
         
     print(conv_model.summary(show_trainable=True))
 
@@ -538,6 +550,8 @@ if __name__ == "__main__":
 
 
     BATCHSIZE = 4
+    POS_WEIGHT = 1.5 # Multiplier of positive class weights
+    print("POS_WEIGHT= "+str(POS_WEIGHT))
 
     outdir = os.path.join(outdir, layername)
     pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)
