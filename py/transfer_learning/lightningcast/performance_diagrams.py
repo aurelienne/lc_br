@@ -398,6 +398,7 @@ def _get_points_in_perf_diagram(observed_labels, forecast_probabilities, nboots=
 def plot_performance_diagram(
     observed_labels,
     forecast_probabilities,
+    label='',
     line_colour=DEFAULT_LINE_COLOUR,
     line_width=DEFAULT_LINE_WIDTH,
     bias_line_colour=DEFAULT_BIAS_LINE_COLOUR,
@@ -502,6 +503,7 @@ def plot_performance_diagram(
             color=line_colour,
             linestyle="solid",
             linewidth=line_width,
+            label=label,
         )
 
         if nboots > 0:

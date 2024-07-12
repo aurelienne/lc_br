@@ -90,57 +90,9 @@ def discard_nan_patches():
                     print(tfrec, os.path.join(rejected_path, os.path.basename(tfrec)))
                     break
 
-def plot_histogram(var):
-    file_list = glob.glob(input_path+'/**/*.tfrec', recursive=True)
-    var_ts = np.zeros((len(file_list), ny, nx))
-    ts_idx = 0
-    for tfrec in file_list:
-        print(tfrec)
-        raw_dataset = tf.data.TFRecordDataset(tfrec)
-        parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
-
-        for features in parsed_dataset.take(1):
-            if var == 'CH02':
-                stride = 4
-            elif var == 'CH05':
-                stride = 2
-            else:        
-                stride = 1
-            data = features[var].numpy()[::stride, ::stride, :]
-            if args.original_values and var != 'FED_accum_60min_2km':
-                trans_data = inv_transform(data, var)
-                var_ts[ts_idx] = np.squeeze(trans_data)
-            else:
-                var_ts[ts_idx] = np.squeeze(data)
-
-        ts_idx += 1
-
-    print(var_ts.flatten().size)
-    plt.hist(var_ts.flatten(), weights=np.zeros_like(var_ts.flatten()) + 1. / (var_ts.flatten()).size)
-    subset_name = os.path.basename(os.path.basename(input_path))
-    if args.original_values:
-        plt.title(var + ' - ' + subset_name) 
-        format_ = 'original'
-    else:
-        plt.title(var + " (Normalized) - " + subset_name)
-        format_ = 'norm'
-
-    plt.ylabel('Relative Frequency')
-    if var == 'CH02' or var == 'CH05':
-        plt.xlabel('Reflectance')
-    else:
-        plt.xlabel('Brightness Temperature')
-
-    #plt.show()
-    plt.savefig(os.path.join(figs_path, 'hist_'+var+'-'+subset_name+'_'+format_+'.png'))
-    plt.close()
-    print("min, mean, max:")
-    print(np.min(var_ts), np.mean(var_ts), np.max(var_ts))
-
-
 
 if __name__ == '__main__':
-    parse_desc = """Check TensorflowRecord Files. It can remove patches with nan values and plot data histograms"""
+    parse_desc = """Check TensorflowRecord Files. It can remove patches with nan values."""
 
     parser = argparse.ArgumentParser(description=parse_desc)
     parser.add_argument(
@@ -152,24 +104,9 @@ if __name__ == '__main__':
         "-i", "--input_dir",
         help="Input Directory from which to read the TFRecord files."
     )
-    #parser.add_argument(
-    #    "-i2", "--input_dir2",
-    #    help="Additional Input Directory from which to read the TFRecord files. (Used to plot histograms of different subsets)"
-    #)
     parser.add_argument(
         "-r", "--rejected_dir",
         help="Output Directory to move the rejected files."
-    )
-    parser.add_argument(
-        "-p", "--plot_hist",
-        help="Plot Histograms",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-o", "--original_values",
-        help="""Whether to plot histograms with original or normalized values. 
-               If this option is not set, normalized values will be considered.""",
-        action="store_true",
     )
 
     args = parser.parse_args()
@@ -181,7 +118,3 @@ if __name__ == '__main__':
 
     if args.discard_nan:
         discard_nan_patches()
-  
-    if args.plot_hist:
-        for var in ('CH02', 'CH05', 'CH13', 'CH15'):
-            plot_histogram(var)

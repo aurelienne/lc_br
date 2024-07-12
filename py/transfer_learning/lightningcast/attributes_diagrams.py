@@ -389,6 +389,7 @@ def _plot_forecast_histogram_same_axes(
 def plot_reliability_curve(
     observed_labels,
     forecast_probabilities,
+    label,
     num_bins=DEFAULT_NUM_BINS,
     axes_object=None,
     color=RELIABILITY_LINE_COLOUR,
@@ -448,6 +449,7 @@ def plot_reliability_curve(
         color=color,
         linestyle="solid",
         linewidth=linewidth,
+        label=label,
     )
 
     if "probs95" in kwargs:
@@ -475,6 +477,7 @@ def plot_reliability_curve(
 def plot_attributes_diagram(
     observed_labels,
     forecast_probabilities,
+    label='',
     num_bins=DEFAULT_NUM_BINS,
     return_main_axes=False,
     nboots=0,
@@ -544,6 +547,7 @@ def plot_attributes_diagram(
             freqs05=event_freqs_05,
             color=color,
             linewidth=linewidth,
+            label=label,
         )
     else:
         line_obj = plot_reliability_curve(
@@ -553,6 +557,7 @@ def plot_attributes_diagram(
             axes_object=axes_object,
             color=color,
             linewidth=linewidth,
+            label=label,
         )
 
     if return_main_axes:

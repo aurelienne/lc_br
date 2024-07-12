@@ -1959,10 +1959,11 @@ if __name__ == "__main__":
         )  # FIXME hard-coded prob-level?
 
     if args.do_seasonal_spatial_verification:
-        seasons = ["DJF", "MAM", "JJA", "SON", "ALL"]
+        #seasons = ["DJF", "MAM", "JJA", "SON", "ALL"]
+        seasons = ['ALL']
         seasonal_spatial_verification(
             outdir,
-            problevel=0.3,
+            problevel=0.35,
             georeference_file=args.georeference_file[0],  # FIXME hard-coded prob-level?
             stride=stride,
             seasons=seasons,

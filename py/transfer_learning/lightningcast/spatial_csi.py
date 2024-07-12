@@ -94,6 +94,7 @@ def main(
     gip = nc.variables["goes_imager_projection"]
     x = nc.variables["x"][::stride]
     y = nc.variables["y"][::stride]
+    print(nc.variables["x"].shape)
     p = Proj(
         "+proj=geos +lon_0="
         + str(gip.longitude_of_projection_origin)
@@ -143,6 +144,8 @@ def main(
     threshIdx = np.where(thresholds == problevel)[0][0]
     thresh = str(int(np.round(thresholds[threshIdx], 2) * 100))
 
+    print(x.shape, y.shape)
+    print(all_csi.shape)
     skill_img(
         all_csi[threshIdx],
         x,

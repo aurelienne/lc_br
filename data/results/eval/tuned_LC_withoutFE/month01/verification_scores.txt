@@ -1,0 +1,9 @@
+model_brier_score: 0.03656
+climo_brier_score: 0.06666
+model_brier_skill_score: 0.45154
+Test sample size: 10150000
+AUPD: 0.7193
+Max CSI: 0.4853; at prob: 0.170
+bin. freq. bias (at max CSI): 1.1320
+bin. acc. (at max CSI): 0.9469
+Max PSS: 0.8060; at prob: 0.020
