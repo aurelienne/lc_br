@@ -548,8 +548,8 @@ if __name__ == "__main__":
     else:
         outdir = args.outdir[0]
 
-
-    BATCHSIZE = 4
+    #BATCHSIZE = 4
+    BATCHSIZE = 2
     POS_WEIGHT = 1.5 # Multiplier of positive class weights
     print("POS_WEIGHT= "+str(POS_WEIGHT))
 
