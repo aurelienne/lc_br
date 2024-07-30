@@ -9,7 +9,7 @@
 # If you have priority to salvador, you can remove a comment from the next line
 ##SBATCH -w r740-105-15
 #SBATCH --partition=salvador 
-##SBATCH -w gustav
+#SBATCH -w gustav
 #SBATCH --nodes=1-1
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=6
@@ -34,5 +34,5 @@ modeldir=/ships22/grain/probsevere/LC/tests/2019-2020/c02051315_poswt5/
 
 # Run script
 #/usr/bin/time -v
-#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/.local --nv $CONTAINER python tf_finetune.py -m /home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5 -l full -o /home/ajorge/lc_br/data/results/fine_tune_weight1.5_trial2/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
-singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/.local --nv $CONTAINER python tf_finetune.py -m /home/ajorge/lc_br/models/full_fineTune.079309.h5 -l 1stEnc_LastDec -o /home/ajorge/lc_br/data/results/fine_tune_twice_1stEncLastDec_w1.5/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/.local --nv $CONTAINER python tf_finetune.py -m /home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5 -l conv2d_16 -o /home/ajorge/lc_br/data/results/fine_tune_w1.5_conv2d_16/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/.local --nv $CONTAINER python tf_finetune.py -m /home/ajorge/lc_br/models/ft_w1.0_t2-59-0.079116.h5 -l full -o /home/ajorge/lc_br/data/results/fine_tune_w1.0_trial2_cont/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/

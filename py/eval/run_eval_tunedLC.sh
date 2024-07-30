@@ -35,4 +35,5 @@ source /etc/profile
 # Run script
 #/usr/bin/time -v
 #singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/models/fineTune_full_featExt.079679.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/results/eval_2021_finetuned/
-singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/models/featExt_fullFT_weitght1.5-53-0.101727.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/results/eval_2021_finetuned_w1.5/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/models/featExt_fullFT_weitght1.5-53-0.101727.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/results/eval_2021_finetuned_w1.5/
+singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/models/ft_w1.0_1stEncLastDec.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/results/eval_2021_finetuned_w1.0_1stEncLastDec/

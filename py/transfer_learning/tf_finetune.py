@@ -2,6 +2,7 @@ from tensorflow.keras.models import Model, save_model, load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
 import tensorflow.keras.backend as K
+from tensorflow.keras.losses import BinaryFocalCrossentropy
 import tensorflow as tf
 import numpy as np
 import sys
@@ -430,9 +431,9 @@ def train():
             #conv_model.trainable = True
             # Compile the Model
             if POS_WEIGHT > 0:
-                conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),weighted_metrics=metrics)
+                conv_model.compile(loss=loss, optimizer=Adam(learning_rate=1e-5),weighted_metrics=metrics)
             else:
-                conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
+                conv_model.compile(loss=loss, optimizer=Adam(learning_rate=1e-5),metrics=metrics)
     else:
         custom_objs, metrics = get_metrics()
         if os.path.basename(input_model) == 'fit_conv_model.h5':
@@ -444,9 +445,9 @@ def train():
         #conv_model.trainable = True
         # Compile the Model
         if POS_WEIGHT > 0:
-            conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),weighted_metrics=metrics)
+            conv_model.compile(loss=loss, optimizer=Adam(learning_rate=1e-5),weighted_metrics=metrics)
         else:
-            conv_model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=1e-5),metrics=metrics)
+            conv_model.compile(loss=loss, optimizer=Adam(learning_rate=1e-5),metrics=metrics)
         
     print(conv_model.summary(show_trainable=True))
 
@@ -548,10 +549,14 @@ if __name__ == "__main__":
     else:
         outdir = args.outdir[0]
 
-    #BATCHSIZE = 4
-    BATCHSIZE = 2
+    BATCHSIZE = 4
     POS_WEIGHT = 1.5 # Multiplier of positive class weights
     print("POS_WEIGHT= "+str(POS_WEIGHT))
+    #alpha=0.25
+    #gamma=5
+    #loss=BinaryFocalCrossentropy(alpha=alpha, gamma=gamma)
+    #print("alpha="+str(alpha)+", gamma="+str(gamma))
+    loss='binary_crossentropy'
 
     outdir = os.path.join(outdir, layername)
     pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)

@@ -375,7 +375,6 @@ parse_fn = parse_tfrecord_control
 sat = "goes16"
 year = "2021"
 inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/test/{year}/"
-#inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/train/{year}/"
 #inroot = f"/ships22/grain/probsevere/LC/tfrecs3/goes16/{year}"
 
 # leave empty if you only want one run

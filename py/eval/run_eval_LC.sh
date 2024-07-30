@@ -34,4 +34,4 @@ source /etc/profile
 
 # Run script
 #/usr/bin/time -v
-singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/results/eval_LC_BR/
+singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/results/eval_LC_BR_valDataset/
