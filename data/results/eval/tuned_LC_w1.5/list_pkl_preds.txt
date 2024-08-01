@@ -1,0 +1,8 @@
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month01/all_preds_labs.pkl
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month02/all_preds_labs.pkl
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month03/all_preds_labs.pkl
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month04/all_preds_labs.pkl
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month09/all_preds_labs.pkl
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month10/all_preds_labs.pkl
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month11/all_preds_labs.pkl
+/home/ajorge/lc_br/data/results/eval/tuned_LC_w1.5/month12/all_preds_labs.pkl

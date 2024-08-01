@@ -6,6 +6,10 @@ from mpl_toolkits import basemap
 import matplotlib.gridspec as gridspec
 import os
 import glob
+import netCDF4
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+
 
 tfrec = sys.argv[1]
 
@@ -13,6 +17,8 @@ NY, NX = 2100, 2100
 ny, nx = 700, 700
 
 figs_path = '/home/ajorge/lc_br/figs/'
+
+state_borders = cfeature.STATES.with_scale("50m")
 
 def parse_tfrecord_fn(example):
     feature_description = {
@@ -106,6 +112,24 @@ def plot_single_patch():
     plt.clf()
     plt.close()
 
+def get_proj(X, Y, NX, NY):
+    georef_file = '/home/ajorge/lc_br/data/GLM_BR_finaldomain.nc'
+    nc = netCDF4.Dataset(georef_file, "r")
+    gip = nc.variables["goes_imager_projection"]
+    x = nc.variables["x"] #[Y:Y+NY, X:X+NX]
+    y = nc.variables["y"] #[Y:Y+NY, X:X+NX]
+    print(x.shape, y.shape)
+    x *= gip.perspective_point_height
+    y *= gip.perspective_point_height
+
+    geoproj = ccrs.Geostationary(
+        central_longitude=gip.longitude_of_projection_origin,
+        sweep_axis="x",
+        satellite_height=gip.perspective_point_height,
+    )
+
+    return x, y, geoproj
+
 
 def plot_entire_grid(ch):
     tfrec_basename = os.path.basename(tfrec)
@@ -115,18 +139,38 @@ def plot_entire_grid(ch):
         ch = 'FED_accum_60min_2km'
         var = 'glm'
         ch_cmap = 'viridis'
+        var_label = 'Flash Extent Density'
     else:
         var = ch.lower()
         if ch == 'CH02' or ch == 'CH05':
             ch_cmap = 'Greys_r'
+            var_label = 'Reflectance'
         else:
             ch_cmap = 'inferno_r'
+            var_label = 'Brightness Temperature'
 
+    if var == 'glm' or var == 'ch13' or var == 'ch15':
+        m = 1
+    elif var == 'ch02':
+        m = 4
+    elif var == 'ch05':
+        m = 2
 
     NY, NX = 2100, 2100
     ny, nx = 700, 700
 
-    fig,axes = plt.subplots(nrows=3,ncols=3, gridspec_kw = {'wspace':0, 'hspace':0},figsize=(9,9))
+    xx, yy, geoproj = get_proj(0, 0, NX, NY)
+    #fig,axes = plt.subplots(nrows=3,ncols=3, gridspec_kw = {'wspace':0, 'hspace':0},figsize=(9,9))
+    #axes.set_extent([xx.min(), xx.max(), yy.min(), yy.max()], crs=geoproj)
+
+    fig = plt.figure(figsize=(9, 10))
+    ax = fig.add_axes([0, 0, 0.95, 1], projection=geoproj)
+    extent = [xx.min(), xx.max(), yy.min(), yy.max()]
+    ax.set_extent(extent, crs=geoproj)
+
+    full_grid = np.zeros((NY*m, NX*m))
+    x_coords = np.linspace(xx.min(), xx.max(), NX*m)
+    y_coords = np.linspace(yy.min(), yy.max(), NY*m)
 
     l = 0
     for Y in range(0, NY, ny):
@@ -134,35 +178,40 @@ def plot_entire_grid(ch):
         for X in range(0, NX, nx):
             #filename = glob.glob(os.path.join(tfrec_dir, '*' + tfrec_prefix + '_Y' + str(Y).zfill(4) + '_X'+str(X).zfill(4) + '*'))[0]
             filename = glob.glob(os.path.join(tfrec_dir, '*' + tfrec_prefix + '_Y' + str(Y) + '_X'+str(X) + '*'))[0]
-            print(filename)
+            #print(filename)
             raw_dataset = tf.data.TFRecordDataset(filename)
             parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
             for features in parsed_dataset.take(1):
-                print(var)
+                #print(var)
                 if var != 'glm':
                     data = inv_transform(features[ch].numpy(), var)
                 else:
                     data = features[ch].numpy()
                     data = np.where(data>=1, 1, 0)
 
-                print(np.max(data))
-                print(np.sum(np.nonzero(data)))
 
-            im = axes[l, c].imshow(data, interpolation=None, cmap=plt.get_cmap(ch_cmap))
+            full_grid[Y*m:Y*m+ny*m,X*m:X*m+nx*m] = np.squeeze(data)
 
-            axes[l, c].get_xaxis().set_visible(False)
-            axes[l, c].get_yaxis().set_visible(False)
-            axes[l, c].set_aspect('equal')
+            plt.axvline(x=x_coords[X*m], color='yellow')
             c = c + 1
 
+        plt.axhline(y=y_coords[Y*m], color='yellow')
         l = l + 1
 
-    cbar_ax = fig.add_axes([0.9, 0.15, 0.05, 0.7])
-    fig.colorbar(im, cax=cbar_ax)
-    plt.suptitle(ch)
-    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+    im = plt.imshow(full_grid, interpolation=None, cmap=plt.get_cmap(ch_cmap), zorder=1, extent=extent)
+    ax.add_feature(state_borders, edgecolor='white', linewidth=1.0, facecolor="none", zorder=20)
+    ax.coastlines(color='white', linewidth=1.0, zorder=30)
+    #ax.set_xticks(np.linspace(xx.min(), xx.max(), 10))
+    #ax.set_yticks(np.linspace(yy.min(), yy.max(), 10))
+
+    cbar_ax = fig.add_axes([0.9, 0.15, 0.03, 0.7])
+    clb = fig.colorbar(im, cax=cbar_ax)
+    clb.set_label(var_label)
+    #plt.suptitle(ch)
     #plt.tight_layout()
-    plt.savefig(os.path.join(figs_path, 'tfrec_fullgrid_' + ch + '.png'))
+
+    plt.savefig(os.path.join(figs_path, 'tfrec_fullgrid_' + ch + '.eps'), format='eps')
+    #plt.show()
     plt.close()
 
 
