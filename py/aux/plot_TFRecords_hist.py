@@ -108,7 +108,11 @@ def plot_samples_histogram():
     ax = plt.gca()
     ax.grid(axis='y', alpha=0.5)
     plt.setp(ax.get_legend().get_texts(), fontsize='9')
-    plt.show()
+    #plt.show()
+    #plt.savefig(os.path.join(figs_path, 'dataset_samples_histogram.png')
+    plt.savefig(os.path.join(figs_path, 'dataset_samples_histogram.eps'), format='eps')
+    plt.savefig(os.path.join(figs_path, 'dataset_samples_histogram.png'))
+    plt.close()
 
 def plot_dates_histogram():
     tr_dates = list(set(get_date_count(train_dir)))
@@ -129,7 +133,10 @@ def plot_dates_histogram():
     ax = plt.gca()
     ax.grid(axis='y', alpha=0.5)
     plt.setp(ax.get_legend().get_texts(), fontsize='9')
-    plt.show()
+    #plt.show()
+    plt.savefig(os.path.join(figs_path, 'dataset_dates_histogram.eps'), format='eps')
+    plt.savefig(os.path.join(figs_path, 'dataset_dates_histogram.png'))
+    plt.close()
 
 def plot_values_histogram(var):
     file_list = glob.glob(input_path+'/**/*.tfrec', recursive=True)
