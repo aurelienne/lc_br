@@ -1,0 +1,12 @@
+Best val_aupr: 0.67963; at epoch 20
+Best val_brier_score: 0.02532; at epoch 17
+Best val_csi05: 0.28898; at epoch 16
+Best val_csi10: 0.35063; at epoch 15
+Best val_csi15: 0.39085; at epoch 13
+Best val_csi20: 0.4172; at epoch 13
+Best val_csi25: 0.43361; at epoch 16
+Best val_csi30: 0.44206; at epoch 17
+Best val_csi35: 0.44427; at epoch 19
+Best val_csi40: 0.4411; at epoch 12
+Best val_csi45: 0.43491; at epoch 12
+Best val_csi50: 0.42317; at epoch 12
