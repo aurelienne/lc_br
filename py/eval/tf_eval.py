@@ -52,6 +52,12 @@ parser.add_argument(
     default=[-1],
     nargs=1,
 )
+parser.add_argument(
+    "-s",
+    "--spatial_eval",
+    help="Whether to generate spatial evaluation matrices or not.",
+     action="store_true",
+)
 
 args = parser.parse_args()
 
@@ -378,14 +384,15 @@ inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/test/{year}/"
 #inroot = f"/ships22/grain/probsevere/LC/tfrecs3/goes16/{year}"
 
 # leave empty if you only want one run
-subdirs = ['01', '02','03','04','09', '10', '11','12']
+#subdirs = ['01', '02','03','04','09', '10', '11','12']
+subdirs = []
 
 if len(subdirs) > 0:
     val_lists = []
     for sub in subdirs:
         val_lists.append(f"{inroot}/{year}{sub}*/*tfrec")
 else:
-    val_lists = [f"{inroot}/*/*.tfrec"]  # this is your "one-run" case
+    val_lists = [f"{inroot}/20211110/*.tfrec"]  # this is your "one-run" case
 
 for ii, val_list in enumerate(val_lists):
     test_filenames = sorted(glob.glob(val_list))  # sort to ensure reproducibility
@@ -474,5 +481,6 @@ for ii, val_list in enumerate(val_lists):
     del dict_results
     print(f"Saved {final_outdir}/" + pkl_file)
 
-    spatial_eval(test_ds, final_outdir)
+    if args.spatial_eval:
+        spatial_eval(test_ds, final_outdir)
 
