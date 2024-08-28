@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
         utils.mkdir_p(outdir)
     else:
-        outdir = os.path.dirname(spatial_counts_file1)
+        outdir = os.path.dirname(spatial_counts_file2)
 
     main(
         spatial_counts_file1,
