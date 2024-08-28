@@ -60,7 +60,7 @@ def compute_monthly_freqs(log_file):
     """
     df = pd.read_csv(log_file, delimiter=',')
     df['date'] = pd.to_datetime(df['dt'])
-    grouped = df.groupby([df['date'].dt.month]).mean()
+    grouped = df.groupby([df['date'].dt.month, df['date'].dt.day]).mean()
     print(grouped)
 
 #def compute_daily_freqs():
