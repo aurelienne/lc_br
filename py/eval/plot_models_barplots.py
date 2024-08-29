@@ -14,10 +14,10 @@ models_path = '/home/ajorge/lc_br/data/results/lr10-4/'
 
 originalLC_eval = '/home/ajorge/lc_br/data/results/eval/original_LC_valDataset/eval_results_sumglm_JScaler.pkl' # Evaluation over validation dataset in order to have the same comparison basis
 
-def read_pkl_eval(metric):
+def read_pkl_eval(metric, model):
     if 'val_' in metric:
         metric = metric.split('val_')[1]
-    pf = pickle.load(open(originalLC_eval, 'rb')) 
+    pf = pickle.load(open(model, 'rb')) 
     try:
         value = pf[metric]
     except:
@@ -33,14 +33,17 @@ def read_log(metric, model):
         metric_values = [float(row[metric]) for row in reader]
     return metric_values
 
-def get_model_groups(models, metric, plot_type):
+def get_model_groups(models, metric, plot_type, dataset):
     # Get metric value from original model
-    orig_value = read_pkl_eval(metric)
+    orig_value = read_pkl_eval(metric, originalLC_eval)
 
     # Get and plot metric from other models
     percents, model_labels, values = [], [], []
     for model in models:
-        value = read_log(metric, model)[-1] # Get only metric value from last epoch
+        if dataset == 'val': # Read from training log
+            value = read_log(metric, model)[-1] # Get only metric value from last epoch
+        elif dataset == 'test':
+            value = read_pkl_eval(metric, os.path.join(models_path, model))
 
         """
         if '/' in model:
@@ -91,7 +94,7 @@ def adjust_model_labels(labels):
     return new_labels
 
 
-def plot_bars_TS_vs_FT(metric, fname, ylabel):
+def plot_bars_TS_vs_FT(metric, fname, ylabel, dataset):
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
     ax2.set_zorder(ax1.get_zorder()+10)
@@ -101,8 +104,8 @@ def plot_bars_TS_vs_FT(metric, fname, ylabel):
     orig_value = read_pkl_eval(metric)
     ax2.axhline(orig_value, label='Original Model', color='red', linestyle='dashed', linewidth=2)
 
-    ts_labels, ts_perc, ts_values = get_model_groups(ts_models, metric, 'ts')
-    ft_labels, ft_perc, ft_values = get_model_groups(ft_models, metric, 'ts')
+    ts_labels, ts_perc, ts_values = get_model_groups(ts_models, metric, 'ts', dataset)
+    ft_labels, ft_perc, ft_values = get_model_groups(ft_models, metric, 'ft', dataset)
 
     values = ts_values + ft_values
     ts_idxs = np.arange(1, len(ts_values)+1)+0.2
@@ -145,7 +148,7 @@ def plot_bars_TS_vs_FT(metric, fname, ylabel):
     plt.close()
 
 
-def plot_bars_FT_opts(metric, fname, ylabel):
+def plot_bars_FT_opts(metric, fname, ylabel, dataset):
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
     ax2.set_zorder(ax1.get_zorder()+10)
@@ -155,7 +158,7 @@ def plot_bars_FT_opts(metric, fname, ylabel):
     orig_value = read_pkl_eval(metric)
     ax2.axhline(orig_value, label='Original Model', color='red', linestyle='dashed', linewidth=2)
 
-    ft_labels, ft_perc, ft_values = get_model_groups(ft_models, metric, 'ft')
+    ft_labels, ft_perc, ft_values = get_model_groups(ft_models, metric, 'ft', dataset)
     ft_labels = adjust_model_labels(ft_labels)
 
     ft_idxs = np.arange(1, len(ft_values)+1)
@@ -207,16 +210,27 @@ if __name__ == "__main__":
         help="Different options of Fine-Tuning Models.",
         action="store_true",
     )
+    parser.add_argument(
+        "-t",
+        "--use_test_evaluation",
+        help="Whether to use evaluation over test dataset or Validation metrics. To use validation, just omit this option.",
+        action="store_true",
+    )
     args = parser.parse_args()
+
+    if args.use_test_evaluation:
+        dataset = 'test'
+    else:
+        dataset = 'val'
 
     if args.ts_vs_ft:
         ts_models = ['fit_full_subset0.10', 'fit_full_subset0.25', 'fit_full_subset0.50', 'fit_full_subset0.75', 'fit_full']
         ft_models = ['fine_tune_subset0.10/full', 'fine_tune_subset0.25/full', 'fine_tune_subset0.50/full', 'fine_tune_subset0.75/full', 'fine_tune/full']
-        plot_bars_TS_vs_FT('val_aupr', 'val_aucpr', 'AUC-PR')
-        plot_bars_TS_vs_FT('val_csi35', 'val_csi35', 'CSI-35%')
+        plot_bars_TS_vs_FT('val_aupr', 'val_aucpr', 'AUC-PR', dataset)
+        plot_bars_TS_vs_FT('val_csi35', 'val_csi35', 'CSI-35%', dataset)
 
     if args.ft_options:
         ft_models = ['fine_tune/conv2d_16', 'fine_tune/1stEnc_LastDec', 'fine_tune/Bot', 'fine_tune/Enc_Bot', 'fine_tune/conv2d_8', 'fine_tune/full']
-        plot_bars_FT_opts('val_aupr', 'val_aucpr', 'AUC-PR')
-        plot_bars_FT_opts('val_csi35', 'val_csi35', 'CSI-35%')
+        plot_bars_FT_opts('val_aupr', 'val_aucpr', 'AUC-PR', dataset)
+        plot_bars_FT_opts('val_csi35', 'val_csi35', 'CSI-35%', dataset)
 
