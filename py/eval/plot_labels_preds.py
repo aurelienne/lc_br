@@ -5,7 +5,10 @@ import numpy as np
 import os
 
 pkl_file = sys.argv[1]
-figs_path = '/home/ajorge/lc_br/figs/samples/'
+figs_path = '/home/ajorge/lc_br/figs/samples_originalLC/'
+
+if not os.path.exists(figs_path):
+    os.mkdir(figs_path)
 
 p = pickle.load(open(pkl_file, 'rb'))
 for idx, preds in enumerate(p['preds']):
