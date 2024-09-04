@@ -19,7 +19,8 @@ def skill_img(
     fs = 14
     mapcolor = "black" if ("POD" in title) else "white"
 
-    cmap = plt.get_cmap("plasma")  # .copy()
+    #cmap = plt.get_cmap("plasma")  # .copy()
+    cmap = plt.get_cmap("bwr_r")  # .copy()
     cmap.set_bad("gray")
     fig = plt.figure(figsize=(10, 8))  # plt.figure(figsize=(10,8))
     ax = fig.add_axes([0, 0, 1, 1], projection=geoproj)
@@ -201,7 +202,7 @@ if __name__ == "__main__":
 
         utils.mkdir_p(outdir)
     else:
-        outdir = os.path.dirname(spatial_counts_file1)
+        outdir = os.path.dirname(spatial_counts_file2)
 
     main(
         spatial_counts_file1,
