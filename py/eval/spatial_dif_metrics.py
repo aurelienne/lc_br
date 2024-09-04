@@ -20,7 +20,7 @@ def skill_img(
     mapcolor = "black" if ("POD" in title) else "white"
 
     #cmap = plt.get_cmap("plasma")  # .copy()
-    cmap = plt.get_cmap("bwr_r")  # .copy()
+    cmap = plt.get_cmap("seismic_r")  # .copy()
     cmap.set_bad("gray")
     fig = plt.figure(figsize=(10, 8))  # plt.figure(figsize=(10,8))
     ax = fig.add_axes([0, 0, 1, 1], projection=geoproj)

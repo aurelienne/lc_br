@@ -199,7 +199,7 @@ def verification(conv_preds, labels, outdir="", climo=-1):
     )
     if len(conv_preds) > 1:
         plot_line(
-            plt.gca(), plt.gcf(), conv_preds[1], labels[1], label='Fine-Tuned', color=color2, perf=True
+            plt.gca(), plt.gcf(), conv_preds[1], labels[1], label='Fine-Tuned (Full)', color=color2, perf=True
         )
     perf_diagram_file_name = os.path.join(outdir, "performance_diagram.png")
     plt.legend(loc='best', prop={'size': 6})
@@ -227,7 +227,7 @@ def verification(conv_preds, labels, outdir="", climo=-1):
     )
     if len(conv_preds) > 1:
         plot_line(
-            ax_ob, fig_ob, conv_preds[1], labels[1], label='Tuned', color=color2, atts=True, lw=lw
+            ax_ob, fig_ob, conv_preds[1], labels[1], label='Fine-Tuned (Full)', color=color2, atts=True, lw=lw
         )
         """
         # plot histogram
@@ -300,7 +300,6 @@ all_labels2 = np.expand_dims(all_labels2, axis=0)
 all_preds = np.concatenate([all_preds1, all_preds2], axis=0)
 print(all_preds.shape)
 all_labels = np.concatenate([all_labels1, all_labels2])
-print(len(all_preds))
 scores_dict = verification(all_preds, all_labels, tmpdir)
 #except:
 #    pass

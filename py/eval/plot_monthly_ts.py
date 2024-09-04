@@ -7,11 +7,14 @@ from matplotlib import pyplot as plt
 
 eval_prefix = '/home/ajorge/lc_br/data/results/eval/' 
 data_dir = '/ships22/grain/ajorge/data/tfrecs_sumglm/test/2021/'
+figs_dir = '/home/ajorge/lc_br/figs/'
 
-models = ['original_LC', 'tuned_LC_w1.0_1stEncLastDec', 'tuned_LC_w1.0_Bot', 'tuned_LC_w1.0_BotDec', 'tuned_LC_w1.0_EncBot', 'tuned_LC_w1.0_LastDec', 'tuned_LC_w1.0_Full']
-model_labels = ['Original', '1stEncLastDec', 'Bottleneck', 'BotDec', 'EncBot', 'LastDec', 'Full']
+#models = ['original_LC', 'tuned_LC_w1.0_1stEncLastDec', 'tuned_LC_w1.0_Bot', 'tuned_LC_w1.0_BotDec', 'tuned_LC_w1.0_EncBot', 'tuned_LC_w1.0_LastDec', 'tuned_LC_w1.0_Full']
+models = ['original_LC', 'fine_tune/full']
+#model_labels = ['Original', '1stEncLastDec', 'Bottleneck', 'BotDec', 'EncBot', 'LastDec', 'Full']
+model_labels = ['Original', 'Full-FT']
 months = ['01', '02', '03', '04', '09', '10', '11', '12']
-months_labels = ['Jan/20', 'Feb/20', 'Mar/20', 'Apr/20', 'Sep/20', 'Oct/20', 'Nov/20', 'Dec/20']
+months_labels = ['Jan/21', 'Feb/21', 'Mar/21', 'Apr/21', 'Sep/21', 'Oct/21', 'Nov/21', 'Dec/21']
 
 
 def get_num_samples(mm):
@@ -37,11 +40,11 @@ def plot_monthly_metric(metric, metric_ext):
 
 
     ax1.legend()
-    ax1.set_ylabel(metric_ext)
-    ax2.set_ylabel('Number of Samples')
+    ax1.set_ylabel(metric_ext + '(lines)')
+    ax2.set_ylabel('Number of Samples (bars)')
     plt.grid(axis='y', alpha=0.5)
     plt.xticks(range(len(months)), months_labels)
-    plt.savefig(f'monthly_{metric}.png')
+    plt.savefig(os.path.join(figs_dir, f'monthly_{metric}.png'))
     plt.close()
 
 plot_monthly_metric('aupr', 'AUC - Precision/Recall')
