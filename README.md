@@ -21,17 +21,24 @@ These datasets are available at:
 
 ## How to Use
 ### Data Pre-processing
-1. Adjust paths and other parameters at the config.ini file.
+1. Adjust paths and other parameters at the PREPROC section in the config.ini file.
 2. Activate glmtools environment which was previously created.
 3. Create gridded fields of “flash-extent density” aggregating the GLM files into 1-minute intervals, and cropping the data into the spatial domain of interest:
 ```
 cd py/preproc
-python generate_gridded_fields.py [config_file_path] [start_date(YYYYmmddHHMM)] [end_date(YYYYmmddHHMM)] [delta_minutes]
+python generate_gridded_fields.py <config_file_path> <start_date(YYYYmmddHHMM)> <end_date(YYYYmmddHHMM)> <delta_minutes>
 ```
 OR, to run multiple intervals, adapt the script run_gen_gridded_fields.sh and run it:
 ```
 cd py/preproc
 ./run_gen_gridded_fields.sh
 ```
-
-
+4. For each timestep (according to the temporal resolution of the dataset - e.g.: 10 minutes if using GOES-16 Full Scan), aggregate flash extent densities for the next 60 minutes.
+```
+python aggregate_glm_grids.py <start_date(yyyyjjjhhmm)> <input_path> -a 60 -o <output_path>
+```
+**OR, to run multiple intervals**, adapt the script **run_agg_60min.sh** and run it:
+```
+./run_agg_60min.sh <yyyy> <mm>
+```
+5. Select files with minimum number of flashes to be used by the network.
