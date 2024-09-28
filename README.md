@@ -61,4 +61,10 @@ python check_TFRecords.py
 ```
 python plot_TFRecords.py
 ```
+### Fine-Tuning
+### Feature Extraction
+### Evaluation
 
+## Credits
+
+## License
