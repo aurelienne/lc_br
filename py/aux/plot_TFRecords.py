@@ -168,9 +168,11 @@ def plot_entire_grid(ch):
     #target_crs = ccrs.PlateCarree()
     #xx, yy = target_crs.transform_points(geoproj, xx, yy)[:, :2].T
 
-    fig = plt.figure(figsize=(9, 10))
-    ax = fig.add_axes([0, 0, 0.90, 1], projection=geoproj)
-    #ax = fig.add_axes([0, 0, 0.95, 1], projection=target_crs)
+    fig = plt.figure(figsize=(9, 9))
+    # Figure Size with colorbar
+    #ax = fig.add_axes([0, 0, 0.90, 1], projection=geoproj)
+    # Figure Size without colorbar
+    ax = fig.add_axes([0, 0, 1, 1], projection=geoproj)
     extent = [xx.min(), xx.max(), yy.min(), yy.max()]
     ax.set_extent(extent, crs=geoproj)
     #ax.set_extent(extent, crs=target_crs)
@@ -213,9 +215,10 @@ def plot_entire_grid(ch):
     #ax.set_xticks(np.linspace(xx.min(), xx.max(), 5))
     #ax.set_yticks(np.linspace(yy.min(), yy.max(), 5))
 
-    cbar_ax = fig.add_axes([0.91, 0.15, 0.03, 0.7])
-    clb = fig.colorbar(im, cax=cbar_ax)
-    clb.set_label(var_label)
+    # Add Colorbar
+    #cbar_ax = fig.add_axes([0.91, 0.15, 0.03, 0.7])
+    #clb = fig.colorbar(im, cax=cbar_ax)
+    #clb.set_label(var_label)
     #plt.suptitle(ch)
     #plt.tight_layout()
 

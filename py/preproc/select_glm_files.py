@@ -6,12 +6,8 @@ import csv
 import pandas as pd
 from matplotlib import pyplot as plt
 import glob
+import configparser
 
-
-patch_size = (700, 700)
-num_patches = 9
-figs_path = '/home/ajorge/lc_br/figs'
-data_path = '/home/ajorge/lc_br/data'
 
 def get_flashes_per_patch(values):
     num_flashes = []
@@ -80,7 +76,24 @@ def create_dataframe(min_percent=0, max_percent=100, min_flashes=0):
 
 if __name__ == "__main__":
     input_path = sys.argv[1]
-    pattern_list = '2020*.netcdf'
-    outfile = 'glm_filtered_60sum_5fde_nocorrect.csv'
+    #pattern_list = '*.netcdf'
+    pattern_list = sys.argv[2]
+    print(pattern_list)
+    #outfile = 'glm_filtered_60sum_extra.csv'
+    outfile = sys.argv[3]
+    config_file = 'config.ini'
+
+    # Parameters from Config File
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    patch_size = [int(size) for size in config['GEO']['patch_size'].split(',')]
+    num_patches = int(config['GEO']['num_patches'])
+    figs_path = config['PATH']['figs_path']
+    data_path = config['PATH']['data_path']
+    min_perc_flashes = float(config['FILTER']['min_percent_flashes'])
+    max_perc_flashes = float(config['FILTER']['max_percent_flashes'])
+    min_flashes = int(config['FILTER']['min_flashes_patch'])
+
     write_csv()
-    create_dataframe(min_percent=2, max_percent=10, min_flashes=3)
+    #create_dataframe(min_percent=2, max_percent=10, min_flashes=3)
+    create_dataframe(min_percent=min_perc_flashes, max_percent=max_perc_flashes, min_flashes=min_flashes)
