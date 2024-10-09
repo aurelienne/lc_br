@@ -1,6 +1,8 @@
+import sys
 import pickle
 import glob
 import os
+import calendar
 import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
@@ -10,16 +12,27 @@ data_dir = '/ships22/grain/ajorge/data/tfrecs_sumglm/test/2021/'
 figs_dir = '/home/ajorge/lc_br/figs/'
 
 #models = ['original_LC', 'tuned_LC_w1.0_1stEncLastDec', 'tuned_LC_w1.0_Bot', 'tuned_LC_w1.0_BotDec', 'tuned_LC_w1.0_EncBot', 'tuned_LC_w1.0_LastDec', 'tuned_LC_w1.0_Full']
-models = ['original_LC', 'fine_tune/full']
+#models = ['original_LC', 'fine_tune/full']
+models = ['original_LC_extra', 'tuned_LC_w1.0_Full_extra/']
 colors = ['red', 'green']
 #model_labels = ['Original', '1stEncLastDec', 'Bottleneck', 'BotDec', 'EncBot', 'LastDec', 'Full']
 model_labels = ['Original', 'Full-FT']
-months = ['01', '02', '03', '04', '09', '10', '11', '12']
-months_labels = ['Jan/21', 'Feb/21', 'Mar/21', 'Apr/21', 'Sep/21', 'Oct/21', 'Nov/21', 'Dec/21']
+#months = ['01', '02', '03', '04', '09', '10', '11', '12']
+#months_labels = ['Jan/21', 'Feb/21', 'Mar/21', 'Apr/21', 'Sep/21', 'Oct/21', 'Nov/21', 'Dec/21']
 
+def get_months(model):
+    mm, mm_labs = [], []
+    for month in os.listdir(os.path.join(eval_prefix, model)):
+        month_number = month.replace('month','')
+        month_name = calendar.month_abbr[int(month_number)]
+        mm.append(month_number)
+        mm_labs.append(month_name)
+    return mm, mm_labs
 
-def get_num_samples(mm):
-    num_samples = len(glob.glob(data_dir + f'????{mm}*/*.tfrec'))
+def get_num_samples(model, month):
+    eval_pkl = os.path.join(eval_prefix, model, 'month' + month, 'eval_results_sumglm_JScaler.pkl')
+    p = pickle.load(open(eval_pkl, 'rb'))
+    num_samples = p['n_samples']
     return num_samples
 
 def get_metric_values(model, metric, month):
@@ -41,7 +54,7 @@ def plot_monthly_metric(metric, metric_ext, metric2=None, metric2_ext=None, metr
 
         for mm in months:
             metric_values.append(get_metric_values(model, metric, mm))
-            num_samples.append(get_num_samples(mm))
+            num_samples.append(get_num_samples(model, mm))
 
             if metric2 != None:
                 metric2_values.append(get_metric_values(model, metric2, mm))
@@ -52,7 +65,7 @@ def plot_monthly_metric(metric, metric_ext, metric2=None, metric2_ext=None, metr
         ax2.bar(range(len(months)), height=num_samples, color='lightgrey', alpha=0.3, label='Number of Samples')
 
         if metric2 != None:
-            ax1.plot(metric2_values, color=color, label=f'{model_labels[i]} - {metric2_ext}', marker='o', linestyle='-.', markersize=5)
+            ax1.plot(metric2_values, color=color, label=f'{model_labels[i]} - {metric2_ext}', marker='o', linestyle='dotted', markersize=5)
 
         if metric3 != None:
             ax1.plot(metric3_values, color=color, label=f'{model_labels[i]} - {metric3_ext}', marker='o', linestyle='--', markersize=5)
@@ -66,5 +79,7 @@ def plot_monthly_metric(metric, metric_ext, metric2=None, metric2_ext=None, metr
     plt.savefig(os.path.join(figs_dir, f'monthly_{metric}.png'))
     plt.close()
 
-plot_monthly_metric('aupr', 'AUC - Precision/Recall')
-plot_monthly_metric('csi35_index0', 'CSI35', 'far35_index0', 'FAR35', 'pod35_index0', 'POD35')
+if __name__ == "__main__":
+    months, months_labels = get_months(models[0])
+    plot_monthly_metric('aupr', 'AUC - Precision/Recall')
+    plot_monthly_metric('csi35_index0', 'CSI35', 'far35_index0', 'FAR35', 'pod35_index0', 'POD35')
