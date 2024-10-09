@@ -10,6 +10,7 @@ from pathlib import Path
 from pickle import dump
 import sys
 from matplotlib import pyplot as plt
+import configparser
 
 def image_feature(value):
     """Returns a bytes_list from a string / byte."""
@@ -68,36 +69,47 @@ def standardize_dist(values, mean, std):
     return new_val
 
 if __name__ == '__main__':
-
-    #glm_path = '/ships22/grain/ajorge/data/glm_grids_60min/agg/'
-    glm_path = '/ships22/grain/ajorge/data/glm_grids_60min_sum/agg/'
-    out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm/train/%Y/%Y%m%d/'
-    #out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm/test/%Y/%Y%m%d/'
-
-    abi_path = '/arcdata/goes/grb/goes16/%Y/%Y_%m_%d_%j/abi/L1b/RadF/'
+    # Global definitions
     glm_pattern = '%Y%m%d-%H%M00.netcdf'
     glmvar = "flash_extent_density"
-    
+    sector = 'Full' # Sector of GOES16 Scan
+
+    # Receive args
+    #glm_path = '/ships22/grain/ajorge/data/glm_grids_60min_sum/agg/'
+    glm_path = sys.argv[1]
+    #out_path = '/ships22/grain/ajorge/data/tfrecs_sumglm/test/%Y/%Y%m%d/'
+    out_path = sys.argv[2]
+    out_path = out_path + '/%Y/%Y%m%d/'
+    print(out_path)
+    glm_filtered_list = sys.argv[3]
+
+    # Parameters from Config File
+    config_file = "config.ini"
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    #abi_path = '/arcdata/goes/grb/goes16/%Y/%Y_%m_%d_%j/abi/L1b/RadF/'
+    abi_path = config['PATH']['abi_path']
     #standard_file = '/home/ajorge/lc_br/data/train_mean_std_aure.csv'
-    standard_file = '/home/ajorge/lc_br/data/train_mean_std_LCcontrol.csv'
-    glm_filtered_list = '/home/ajorge/lc_br/data/glm_filtered_sumglm.csv'
+    #standard_file = '/home/ajorge/lc_br/data/train_mean_std_LCcontrol.csv'
+    standard_file = config['PATH']['LCControl_std_parameters']
+    #glm_filtered_list = '/home/ajorge/lc_br/data/glm_filtered_sumglm_extra.csv'
     #glm_filtered_list = '/home/ajorge/lc_br/data/glm_filtered_sumglm_2021.csv'
 
-    sector = 'Full'
-    #ltgthresh = 3 #should be in byte-scaled space.
-              #We set a minimum threshold of 3 flashes, so that we
-              #don't get any patches with very sparse lightning.
-
-
-    NY,NX = 2100,2100 # grid size
-    ny,nx = 700,700   # patch size
+    #NY,NX = 2100,2100 # grid size
+    #ny,nx = 700,700   # patch size
+    NY = int(config['GEO']['grid_size'].split(',')[0])
+    print(type(NY))
+    NX = int(config['GEO']['grid_size'].split(',')[1])
+    ny = int(config['GEO']['patch_size'].split(',')[0])
+    nx = int(config['GEO']['patch_size'].split(',')[1])
+    Y_ABI_ch = int(config['GEO']['Y_ABI_ch'])
+    X_ABI_ch = int(config['GEO']['X_ABI_ch'])
     Y_glm, X_glm = 0, 0
-    #Y_ch02, X_ch02 = 9503, 10709
-    #Y_ch05, X_ch05 = 4753, 5300
-    Y_ch13, X_ch13 = 2365, 2646
-    Y_ch15, X_ch15 = Y_ch13, X_ch13
-    Y_ch02, X_ch02 = Y_ch13*4, X_ch13*4
-    Y_ch05, X_ch05 = Y_ch13*2, X_ch13*2
+    #Y_ch13, X_ch13 = 2365, 2646 
+    Y_ch13, X_ch13 = Y_ABI_ch, X_ABI_ch
+    Y_ch15, X_ch15 = Y_ABI_ch, X_ABI_ch
+    Y_ch02, X_ch02 = Y_ABI_ch*4, X_ABI_ch*4
+    Y_ch05, X_ch05 = Y_ABI_ch*2, X_ABI_ch*2
 
     # Load Scalers
     glm_mean, glm_std, ch02_mean, ch02_std, ch05_mean, ch05_std, \
@@ -169,7 +181,6 @@ if __name__ == '__main__':
         # CH13 and CH15 have 2-km spatial resolution. That is why the patch sizes are different.
         for Y in range(0, NY, ny):
             for X in range(0, NX, nx):
-                print(Y,X)
 
                 outdir = abidt.strftime(out_path)
                 Path(outdir).mkdir(parents=True, exist_ok=True)
@@ -182,7 +193,6 @@ if __name__ == '__main__':
                     channels['CH05'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(ch05[Y*2:(Y+ny)*2,X*2:(X+nx)*2], ch05_mean, ch05_std), dtype=tf.float32))
                     channels['CH13'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(ch13[Y:Y+ny,X:X+nx], ch13_mean, ch13_std), dtype=tf.float32))
                     channels['CH15'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(ch15[Y:Y+ny,X:X+nx], ch15_mean, ch15_std), dtype=tf.float32))
-                    #channels['FED_accum_60min_2km'] = tf.io.serialize_tensor(tf.convert_to_tensor(standardize_dist(glm_agg[Y:Y+ny,X:X+nx], glm_mean, glm_std), dtype=tf.float32)) 
                     channels['FED_accum_60min_2km'] = tf.io.serialize_tensor(tf.convert_to_tensor(glm_agg[Y:Y+ny,X:X+nx], dtype=tf.float32)) # There is no need to standardize GLM, as it will be binarized later
 
                     example = create_example(channels)

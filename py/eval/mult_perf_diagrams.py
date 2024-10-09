@@ -82,7 +82,7 @@ def plot_line(
         )
         labs = ["5", "10", "20", "30", "40", "50", "60", "70", "80", "90", "95"]
         axes_object.plot(
-            xs, ys, color=color, marker="o", linestyle="None", markersize=6
+            xs, ys, color=color, marker="o", linestyle="None", markersize=9
         )
 
         for i in range(len(xs)):
@@ -93,7 +93,7 @@ def plot_line(
                 xcor = 0.0125
                 ycor = 0.0075
             axes_object.annotate(
-                labs[i], xy=(xs[i] - xcor, ys[i] - ycor), color="white", fontsize=4
+                labs[i], xy=(xs[i] - xcor, ys[i] - ycor), color="white", fontsize=5, fontweight='bold'
             )
 
     elif atts:
@@ -199,11 +199,12 @@ def verification(conv_preds, labels, outdir="", climo=-1):
     )
     if len(conv_preds) > 1:
         plot_line(
-            plt.gca(), plt.gcf(), conv_preds[1], labels[1], label='Fine-Tuned', color=color2, perf=True
+            plt.gca(), plt.gcf(), conv_preds[1], labels[1], label='Fine-Tuned (Full)', color=color2, perf=True
         )
-    perf_diagram_file_name = os.path.join(outdir, "performance_diagram.png")
-    plt.legend(loc='best', prop={'size': 6})
-    plt.savefig(perf_diagram_file_name, dpi=300, bbox_inches="tight")
+    perf_diagram_file_name = os.path.join(outdir, "performance_diagram")
+    plt.legend(loc='best', prop={'size': 8})
+    plt.savefig(f"{perf_diagram_file_name}.png", dpi=300, bbox_inches="tight")
+    plt.savefig(f"{perf_diagram_file_name}.eps", dpi=300, bbox_inches="tight", format="eps")
     plt.close()
 
     lw = 1.5
@@ -227,7 +228,7 @@ def verification(conv_preds, labels, outdir="", climo=-1):
     )
     if len(conv_preds) > 1:
         plot_line(
-            ax_ob, fig_ob, conv_preds[1], labels[1], label='Tuned', color=color2, atts=True, lw=lw
+            ax_ob, fig_ob, conv_preds[1], labels[1], label='Fine-Tuned (Full)', color=color2, atts=True, lw=lw
         )
         """
         # plot histogram
@@ -238,9 +239,10 @@ def verification(conv_preds, labels, outdir="", climo=-1):
         )
         """
     
-    attr_diagram_file_name = os.path.join(outdir, "attributes_diagram.png")
-    plt.legend(loc='best', prop={'size': 6})
-    plt.savefig(attr_diagram_file_name, dpi=300, bbox_inches="tight")
+    attr_diagram_file_name = os.path.join(outdir, "attributes_diagram")
+    plt.legend(loc='best', prop={'size': 8})
+    plt.savefig(f"{attr_diagram_file_name}.png", dpi=300, bbox_inches="tight")
+    plt.savefig(f"{attr_diagram_file_name}.eps", dpi=300, bbox_inches="tight", format='eps')
     plt.close()
 
 
@@ -272,37 +274,36 @@ def merge_pkl_files(pkl_list_file):
 
     return all_dicts
 
-pkl_list_file1 = sys.argv[1]
-outdir = sys.argv[2]
-tmpdir = f"{outdir}/ALL/"
+if __name__ == "__main__":
+    pkl_list_file1 = sys.argv[1]
+    outdir = sys.argv[2]
+    tmpdir = f"{outdir}/ALL/"
 
-try:
-    pkl_list_file2 = sys.argv[3]
-except:
-    pass
+    try:
+        pkl_list_file2 = sys.argv[3]
+    except:
+        pass
 
-all_dicts1 = merge_pkl_files(pkl_list_file1)
-all_preds1 = all_dicts1["preds"].flatten()
-print(all_preds1.shape)
-all_preds1 = np.expand_dims(all_preds1, axis=0)
-all_labels1 = all_dicts1["labels"].flatten()
-all_labels1 = np.expand_dims(all_labels1, axis=0)
-#datetimes = all_dicts["datetimes"]
-#stride = all_dicts["stride"]
+    all_dicts1 = merge_pkl_files(pkl_list_file1)
+    all_preds1 = all_dicts1["preds"].flatten()
+    print(all_preds1.shape)
+    all_preds1 = np.expand_dims(all_preds1, axis=0)
+    all_labels1 = all_dicts1["labels"].flatten()
+    all_labels1 = np.expand_dims(all_labels1, axis=0)
+    #datetimes = all_dicts["datetimes"]
+    #stride = all_dicts["stride"]
 
-#try:
-all_dicts2 = merge_pkl_files(pkl_list_file2)
-all_preds2 = all_dicts2["preds"].flatten()
-all_labels2 = all_dicts2["labels"].flatten()
-all_preds2 = np.expand_dims(all_preds2, axis=0)
-all_labels2 = np.expand_dims(all_labels2, axis=0)
+    #try:
+    all_dicts2 = merge_pkl_files(pkl_list_file2)
+    all_preds2 = all_dicts2["preds"].flatten()
+    all_labels2 = all_dicts2["labels"].flatten()
+    all_preds2 = np.expand_dims(all_preds2, axis=0)
+    all_labels2 = np.expand_dims(all_labels2, axis=0)
 
-all_preds = np.concatenate([all_preds1, all_preds2], axis=0)
-print(all_preds.shape)
-all_labels = np.concatenate([all_labels1, all_labels2])
-print(len(all_preds))
-scores_dict = verification(all_preds, all_labels, tmpdir)
-#except:
-#    pass
-
+    all_preds = np.concatenate([all_preds1, all_preds2], axis=0)
+    print(all_preds.shape)
+    all_labels = np.concatenate([all_labels1, all_labels2])
+    scores_dict = verification(all_preds, all_labels, tmpdir)
+    #except:
+    #    pass
 

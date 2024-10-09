@@ -530,7 +530,7 @@ def plot_performance_diagram(
         )
         labs = ["5", "10", "20", "30", "40", "50", "60", "70", "80", "90", "95"]
         axes_object.plot(
-            xs, ys, linestyle="None", color=line_colour, marker="o", markersize=6
+            xs, ys, linestyle="None", color=line_colour, marker="o", markersize=9
         )
 
         for i in range(len(xs)):
@@ -541,7 +541,7 @@ def plot_performance_diagram(
                 xcor = 0.0125
                 ycor = 0.0075
             axes_object.annotate(
-                labs[i], xy=(xs[i] - xcor, ys[i] - ycor), color="white", fontsize=4
+                labs[i], xy=(xs[i] - xcor, ys[i] - ycor), color="white", fontsize=5, fontweight='bold'
             )
 
     axes_object.set_xlabel("Success ratio (1 - FAR)")

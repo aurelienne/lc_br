@@ -103,32 +103,39 @@ def plot_bars_TS_vs_FT(metric, fname, ylabel, dataset):
 
     # Get metric value from original model
     orig_value = read_pkl_eval(metric, originalLC_eval)
-    ax2.axhline(orig_value, label='Original Model', color='red', linestyle='dashed', linewidth=2)
+    print(f"Orig_value: {orig_value}")
+    ax2.axhline(orig_value, label='Original', color='red', linestyle='dashed', linewidth=2)
 
     ts_labels, ts_perc, ts_values = get_model_groups(ts_models, metric, 'ts', dataset)
+    print(ts_perc)
+    print(ts_values)
     ft_labels, ft_perc, ft_values = get_model_groups(ft_models, metric, 'ft', dataset)
+    print(ft_perc)
+    print(ft_values)
 
     values = ts_values + ft_values
     ts_idxs = np.arange(1, len(ts_values)+1)+0.2
     ft_idxs = np.arange(1, len(ft_values)+1)-0.2
-    ax2.plot(ts_idxs, ts_values, marker='o', color='green', label='Train from Scratch')
-    ax2.plot(ft_idxs, ft_values, marker='o', color='blue', label='Fine-Tuning')
+    ax2.plot(ts_idxs, ts_values, marker='o', color='green', label='Trained from Scratch')
+    ax2.plot(ft_idxs, ft_values, marker='o', color='blue', label='Fine-Tuned')
 
     # Legend from bars
-    lblue_patch = mpatches.Patch(color='lightgreen', label='Train from Scratch')
-    blue_patch = mpatches.Patch(color='lightblue', label='Fine-Tuning')
+    lblue_patch = mpatches.Patch(color='lightgreen', label='Trained from Scratch')
+    blue_patch = mpatches.Patch(color='lightblue', label='Fine-Tuned')
     labels1 = ['Train from Scratch', 'Fine-Tuning']
 
     ax1.bar(ts_idxs, height=ts_perc, width=0.5, color='lightgreen')
     ax1.bar(ft_idxs, height=ft_perc, width=0.5, color='lightblue')
-    plt.xticks(range(1, len(ts_labels)+1), ts_labels) 
-    ax1.set_ylabel(f"% of Improvement [{ylabel}]\n(bars)")
-    ax2.set_ylabel(f"{ylabel}\n(lines)")
+    plt.xticks(range(1, len(ts_labels)+1), ts_labels)
+    ax1.tick_params(labelsize=12)
+    ax2.tick_params(labelsize=12)
+    ax1.set_ylabel(f"% of Improvement ({ylabel})\n[bars]", fontsize=13)
+    ax2.set_ylabel(f"{ylabel}\n[lines]", fontsize=13)
 
     #ax1.tick_params(axis='x', labelrotation=90)
     #ax1.set_ylim(bottom=-1.2)
     # Adjust the margins
-    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.87)
+    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
     plt.grid(axis='y', alpha=0.5)
 
     # Get the handles and labels from both axes
@@ -139,9 +146,9 @@ def plot_bars_TS_vs_FT(metric, fname, ylabel, dataset):
     handles = handles1 + handles2
     labels = labels1 + labels2
 
-    ax1.set_xlabel('Amount of Data (%)')
+    ax1.set_xlabel('Amount of Data (%)', fontsize=13)
     #plt.legend(handles, labels)
-    plt.legend(handles2, labels2)
+    plt.legend(handles2, labels2, fontsize=13, title_fontsize=14)
     outdir = os.path.join(figs_path, 'ts_vs_ft')
     if not os.path.exists(outdir):
         os.mkdir(outdir)
@@ -158,13 +165,18 @@ def plot_bars_FT_opts(metric, fname, ylabel, dataset):
 
     # Get metric value from original model
     orig_value = read_pkl_eval(metric, originalLC_eval)
-    ax2.axhline(orig_value, label='Original Model', color='red', linestyle='dashed', linewidth=2)
+    ax2.axhline(orig_value, label='Original', color='red', linestyle='dashed', linewidth=2)
+    print(f"Original Value: {orig_value}")
 
     ft_labels, ft_perc, ft_values = get_model_groups(ft_models, metric, 'ft', dataset)
+    print("Percs:")
+    print(ft_perc)
+    print("Values:")
+    print(ft_values)
     ft_labels = adjust_model_labels(ft_labels)
 
     ft_idxs = np.arange(1, len(ft_values)+1)
-    ax2.plot(ft_idxs, ft_values, marker='o', color='blue', label='Fine-Tuning')
+    ax2.plot(ft_idxs, ft_values, marker='o', color='blue', label='Fine-Tuned')
 
     # Legend from bars
     #blue_patch = mpatches.Patch(color='lightblue', label='Fine-Tuning')
@@ -173,11 +185,14 @@ def plot_bars_FT_opts(metric, fname, ylabel, dataset):
     ax1.bar(ft_idxs, height=ft_perc, width=0.5, color='lightblue')
 
     plt.xticks(range(1, len(ft_labels)+1), ft_labels) 
-    ax1.tick_params(axis='x', labelrotation=90)
-    ax1.set_ylabel(f"% of Improvement [{ylabel}]\n(bars)")
-    ax2.set_ylabel(f"{ylabel}\n(lines)")
+    plt.yticks(fontsize=12)
+    ax1.tick_params(axis='x', labelrotation=90, labelsize=12)
+    ax1.tick_params(axis='y', labelsize=12)
+    ax2.tick_params(labelsize=12)
+    ax1.set_ylabel(f"% of Improvement ({ylabel})\n[bars]", fontsize=13)
+    ax2.set_ylabel(f"{ylabel}\n[lines]", fontsize=13)
 
-    plt.subplots_adjust(left=0.15, bottom=0.25, right=0.87)
+    plt.subplots_adjust(left=0.15, bottom=0.25, right=0.85)
     plt.grid(axis='y', alpha=0.5)
 
     blue_patch = mpatches.Patch(color='lightblue', label='Fine-Tuning')
@@ -193,7 +208,7 @@ def plot_bars_FT_opts(metric, fname, ylabel, dataset):
 
     #ax1set_xlabel('Fine-Tuning Options')
     #plt.legend(handles, labels)
-    plt.legend(handles2, labels2)
+    plt.legend(handles2, labels2, fontsize=13, title_fontsize=14)
     outdir = os.path.join(figs_path, 'ft_options')
     if not os.path.exists(outdir):
         os.mkdir(outdir)

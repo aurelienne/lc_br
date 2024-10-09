@@ -13,12 +13,6 @@ import plotly.express as px
 import pandas as pd
 import seaborn as sns
 
-#input_path = sys.argv[1]
-#try:
-#    rejected_path = sys.argv[2]
-#except:
-#    pass
-
 NY, NX = 2100, 2100
 ny, nx = 700, 700
 
@@ -91,8 +85,8 @@ def plot_samples_histogram():
     tr_dates = get_date_count(train_dir)
     val_dates = get_date_count(val_dir)
     ts_dates = get_date_count(test_dir)
-    months = sorted(set(tr_dates + val_dates + ts_dates))
-    months_names = [datetime.strftime(month, '%b') for month in months]
+    #months = sorted(set(tr_dates + val_dates + ts_dates))
+    #months_names = [datetime.strftime(month, '%b') for month in months]
 
     data = {
     'Date': tr_dates + val_dates + ts_dates,
@@ -102,12 +96,14 @@ def plot_samples_histogram():
     df['Month'] = df['Date'].dt.strftime('%b')
     df['Month'] = pd.Categorical(df['Month'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Sep', 'Oct', 'Nov', 'Dec'])
 
-    sns.histplot(data=df, x='Month', hue='Dataset', multiple='stack', palette='muted', element='bars', discrete=False)
-    plt.xlabel('Month')
-    plt.ylabel('Number of Samples')
+    g = sns.histplot(data=df, x='Month', hue='Dataset', multiple='stack', palette='muted', element='bars', discrete=True)
+    plt.xlabel('Month', fontsize='13')
+    plt.ylabel('Number of Samples', fontsize='13')
     ax = plt.gca()
     ax.grid(axis='y', alpha=0.5)
-    plt.setp(ax.get_legend().get_texts(), fontsize='9')
+    plt.setp(ax.get_legend().get_texts(), fontsize='13')
+    plt.setp(ax.get_legend().get_title(), fontsize='14')
+    g.tick_params(labelsize=12)
     #plt.show()
     #plt.savefig(os.path.join(figs_path, 'dataset_samples_histogram.png')
     plt.savefig(os.path.join(figs_path, 'dataset_samples_histogram.eps'), format='eps')
@@ -127,44 +123,75 @@ def plot_dates_histogram():
     df['Month'] = df['Date'].dt.strftime('%b')
     df['Month'] = pd.Categorical(df['Month'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Sep', 'Oct', 'Nov', 'Dec'])
 
-    sns.histplot(data=df, x='Month', hue='Dataset', multiple='stack', palette='muted', element='bars', discrete=False)
-    plt.xlabel('Month')
-    plt.ylabel('Number of Days')
+    g = sns.histplot(data=df, x='Month', hue='Dataset', multiple='stack', palette='muted', element='bars', discrete=True)
+    plt.xlabel('Month', fontsize='13')
+    plt.ylabel('Number of Days', fontsize='13')
     ax = plt.gca()
     ax.grid(axis='y', alpha=0.5)
-    plt.setp(ax.get_legend().get_texts(), fontsize='9')
+    plt.setp(ax.get_legend().get_texts(), fontsize='13')
+    plt.setp(ax.get_legend().get_title(), fontsize='14')
+    g.tick_params(labelsize=12)
     #plt.show()
     plt.savefig(os.path.join(figs_path, 'dataset_dates_histogram.eps'), format='eps')
     plt.savefig(os.path.join(figs_path, 'dataset_dates_histogram.png'))
     plt.close()
 
-def plot_values_histogram(var):
-    file_list = glob.glob(input_path+'/**/*.tfrec', recursive=True)
-    var_ts = np.zeros((len(file_list), ny, nx))
-    ts_idx = 0
-    for tfrec in file_list:
-        print(tfrec)
-        raw_dataset = tf.data.TFRecordDataset(tfrec)
-        parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
+def plot_values_histogram(var, input_path):
+    monthly_stats = []
+    for mm in range(1, 13):
+        file_list = glob.glob(input_path+f'/**/goes16_????{mm:02}*.tfrec', recursive=True)
+        print(input_path+f'/**/????{mm:02}*.tfrec')
+        var_ts = np.zeros((len(file_list), ny, nx))
+        ts_idx = 0
+        for tfrec in file_list:
+            print(tfrec)
+            raw_dataset = tf.data.TFRecordDataset(tfrec)
+            parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
 
-        for features in parsed_dataset.take(1):
-            if var == 'CH02':
-                stride = 4
-            elif var == 'CH05':
-                stride = 2
-            else:        
-                stride = 1
-            data = features[var].numpy()[::stride, ::stride, :]
-            if args.original_values and var != 'FED_accum_60min_2km':
-                trans_data = inv_transform(data, var)
-                var_ts[ts_idx] = np.squeeze(trans_data)
-            else:
-                var_ts[ts_idx] = np.squeeze(data)
+            for features in parsed_dataset.take(1):
+                if var == 'CH02':
+                    stride = 4
+                elif var == 'CH05':
+                    stride = 2
+                else:        
+                    stride = 1
+                data = features[var].numpy()[::stride, ::stride, :]
+                if args.original_values and var != 'FED_accum_60min_2km':
+                    trans_data = inv_transform(data, var)
+                    var_ts[ts_idx] = np.squeeze(trans_data)
+                else:
+                    var_ts[ts_idx] = np.squeeze(data)
 
-        ts_idx += 1
+            ts_idx += 1
 
-    print(var_ts.flatten().size)
-    plt.hist(var_ts.flatten(), weights=np.zeros_like(var_ts.flatten()) + 1. / (var_ts.flatten()).size)
+        """
+        print(var_ts.flatten().size)
+        plt.hist(var_ts.flatten(), weights=np.zeros_like(var_ts.flatten()) + 1. / (var_ts.flatten()).size)
+        """
+        """
+
+        plt.ylabel('Relative Frequency')
+        if var == 'CH02' or var == 'CH05':
+            plt.xlabel('Reflectance')
+        else:
+            plt.xlabel('Brightness Temperature')
+
+        #plt.show()
+        plt.savefig(os.path.join(figs_path, f'hist_{var}-{subset_name}_{format_}_month{mm:02}.png'))
+        plt.close()
+        """
+
+        if ts_idx > 0:
+            monthly_stats.append({
+                    'label': f'M{mm:02}',
+                    'med': np.median(var_ts),
+                    'q1': np.percentile(var_ts, 25),
+                    'q3': np.percentile(var_ts, 75),
+                    'whislo': np.min(var_ts),
+                    'whishi': np.max(var_ts)})
+            print(monthly_stats)
+        del var_ts
+
     subset_name = os.path.basename(os.path.basename(input_path))
     if args.original_values:
         plt.title(var + ' - ' + subset_name) 
@@ -172,18 +199,9 @@ def plot_values_histogram(var):
     else:
         plt.title(var + " (Normalized) - " + subset_name)
         format_ = 'norm'
-
-    plt.ylabel('Relative Frequency')
-    if var == 'CH02' or var == 'CH05':
-        plt.xlabel('Reflectance')
-    else:
-        plt.xlabel('Brightness Temperature')
-
-    #plt.show()
-    plt.savefig(os.path.join(figs_path, 'hist_'+var+'-'+subset_name+'_'+format_+'.png'))
-    plt.close()
-    print("min, mean, max:")
-    print(np.min(var_ts), np.mean(var_ts), np.max(var_ts))
+    fig, ax = plt.subplots()
+    ax.bxp(monthly_stats, showfliers=False)
+    plt.savefig(os.path.join(figs_path, f'bxp_{var}-{subset_name}_{format_}.png'))
 
 
 
@@ -228,13 +246,21 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    train_dir = args.train_dir
-    val_dir = args.val_dir
-    test_dir = args.test_dir
+    if args.train_dir:
+        train_dir = args.train_dir
+    if args.val_dir:
+        val_dir = args.val_dir
+    if args.test_dir:
+        test_dir = args.test_dir
 
     if args.plot_values_hist:
         for var in ('CH02', 'CH05', 'CH13', 'CH15'):
-            plot_values_histogram(var)
+            if args.train_dir:
+                plot_values_histogram(var, train_dir)
+            if args.val_dir:
+                plot_values_histogram(var, val_dir)
+            if args.test_dir:
+                plot_values_histogram(var, test_dir)
 
     if args.plot_dates_hist:
         plot_dates_histogram()

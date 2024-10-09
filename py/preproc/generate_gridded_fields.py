@@ -17,19 +17,22 @@ import pandas
 from multiprocessing import Pool
 
 # Receive args
-config_file = sys.argv[1]
-start_dt_str = sys.argv[2]
-end_dt_str = sys.argv[3]
-delta_min = sys.argv[4]
+config_file = "config.ini"
+start_dt_str = sys.argv[1]
+end_dt_str = sys.argv[2]
+delta_min = sys.argv[3]
 
 # Parameters from Config File
 config = configparser.ConfigParser()
 config.read(config_file)
-glm_path = config['PATHS']['glm_path']
-temp_path = config['PATHS']['temp_path']
-#output_path = config['PATHS']['output_path']
-output_path = "/ships22/grain/ajorge/data/glm_grids_1min/"
-makeGLMgrids_path =  config['PATHS']['makeGLMgrids_path']
+glm_path = config['PATH']['glm_path']
+temp_path = config['PATH']['temp_path']
+glm_1min_path = config['PATH']['glm_1min_path']
+makeGLMgrids_path =  config['PATH']['makeGLMgrids_path']
+ctr_lon = config['GEO']['ctr_lon']
+ctr_lat = config['GEO']['ctr_lat']
+width_km = config['GEO']['width_km']
+height_km = config['GEO']['height_km']
 
 
 def make_grid_deltamin(dt_str):
@@ -54,10 +57,10 @@ def make_grid_deltamin(dt_str):
         dt = dt + timedelta(minutes=1)
 
     # Make grid
-    try:
-        os.system('python ' + makeGLMgrids_path + ' --fixed_grid --split_events --goes_position east --dx=2.0 --dy=2.0 --ctr_lon=-54.5 --ctr_lat=-14.5 --width="4500.0" --height="4500.0" -o '+ output_path + '/grids/{start_time:%Y/%b/%d}/{dataset_name} ' + files_list)
-    except:
-        pass
+    #try:
+    os.system(f'python {makeGLMgrids_path} --fixed_grid --split_events --goes_position east --dx=2.0 --dy=2.0 --ctr_lon={ctr_lon} --ctr_lat={ctr_lat} --width={width_km} --height={height_km} -o {glm_1min_path}/grids/' + '{start_time:%Y/%b/%d}/{dataset_name}' + files_list)
+    #except:
+    #    pass
 
 
 if __name__ == "__main__":

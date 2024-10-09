@@ -20,7 +20,7 @@ def skill_img(
     mapcolor = "black" if ("POD" in title) else "white"
 
     #cmap = plt.get_cmap("plasma")  # .copy()
-    cmap = plt.get_cmap("bwr_r")  # .copy()
+    cmap = plt.get_cmap("seismic_r")  # .copy()
     cmap.set_bad("gray")
     fig = plt.figure(figsize=(10, 8))  # plt.figure(figsize=(10,8))
     ax = fig.add_axes([0, 0, 1, 1], projection=geoproj)
@@ -145,9 +145,6 @@ def main(
     dif_csi = all_csi_2[threshIdx] - all_csi_1[threshIdx]
     dif_far = all_far_2[threshIdx] - all_far_1[threshIdx]
     dif_pod = all_pod_2[threshIdx] - all_pod_1[threshIdx]
-    print(np.sum(dif_csi[dif_csi>0]))
-    plt.imshow(dif_csi)
-    plt.show()
 
     print(x.shape, y.shape)
     skill_img(
@@ -162,6 +159,7 @@ def main(
         vinc=0.05,
     )
     plt.savefig(f"{outdir}/dif_geo_csi.png", bbox_inches="tight")
+    plt.savefig(f"{outdir}/dif_geo_csi.eps", bbox_inches="tight", format='eps')
     plt.close()
     skill_img(
         dif_pod,

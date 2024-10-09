@@ -1974,7 +1974,12 @@ if __name__ == "__main__":
             os.system(
                 f"montage {outdir}/{season}/geo_pod.png {outdir}/{season}/geo_far.png "
                 + f"{outdir}/{season}/geo_csi.png {outdir}/{season}/obs_cts.png -border 1%x1% "
-                + f"-geometry 600x400+2+2 -tile 2x2 -frame 0 {outdir}/{season}/geo_montage.png"
+                + f"-geometry 400x400+2+2 -tile 2x2 -frame 0 {outdir}/{season}/geo_montage.png"
+            )
+            os.system(
+                f"montage {outdir}/{season}/geo_pod.png {outdir}/{season}/geo_far.png "
+                + f"{outdir}/{season}/geo_csi.png {outdir}/{season}/obs_cts.png -border 1%x1% "
+                + f"-geometry 400x400+2+2 -tile 2x2 -frame 0 {outdir}/{season}/geo_montage.eps"
             )
             if os.path.isfile(f"{outdir}/{season}/geo_montage.png"):
                 if args.rsync:

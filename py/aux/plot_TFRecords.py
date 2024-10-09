@@ -9,7 +9,8 @@ import glob
 import netCDF4
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-
+import aux
+import pyproj
 
 tfrec = sys.argv[1]
 
@@ -162,11 +163,19 @@ def plot_entire_grid(ch):
     xx, yy, geoproj = get_proj(0, 0, NX, NY)
     #fig,axes = plt.subplots(nrows=3,ncols=3, gridspec_kw = {'wspace':0, 'hspace':0},figsize=(9,9))
     #axes.set_extent([xx.min(), xx.max(), yy.min(), yy.max()], crs=geoproj)
+    
+    # Convert CRS
+    #target_crs = ccrs.PlateCarree()
+    #xx, yy = target_crs.transform_points(geoproj, xx, yy)[:, :2].T
 
-    fig = plt.figure(figsize=(9, 10))
-    ax = fig.add_axes([0, 0, 0.95, 1], projection=geoproj)
+    fig = plt.figure(figsize=(9, 9))
+    # Figure Size with colorbar
+    #ax = fig.add_axes([0, 0, 0.90, 1], projection=geoproj)
+    # Figure Size without colorbar
+    ax = fig.add_axes([0, 0, 1, 1], projection=geoproj)
     extent = [xx.min(), xx.max(), yy.min(), yy.max()]
     ax.set_extent(extent, crs=geoproj)
+    #ax.set_extent(extent, crs=target_crs)
 
     full_grid = np.zeros((NY*m, NX*m))
     x_coords = np.linspace(xx.min(), xx.max(), NX*m)
@@ -188,6 +197,8 @@ def plot_entire_grid(ch):
                 else:
                     data = features[ch].numpy()
                     data = np.where(data>=1, 1, 0)
+                    if var == 'CH02' or var == 'CH05':
+                        data = np.sqrt(data)
 
 
             full_grid[Y*m:Y*m+ny*m,X*m:X*m+nx*m] = np.squeeze(data)
@@ -200,17 +211,19 @@ def plot_entire_grid(ch):
 
     im = plt.imshow(full_grid, interpolation=None, cmap=plt.get_cmap(ch_cmap), zorder=1, extent=extent)
     ax.add_feature(state_borders, edgecolor='white', linewidth=1.0, facecolor="none", zorder=20)
-    ax.coastlines(color='white', linewidth=1.0, zorder=30)
-    #ax.set_xticks(np.linspace(xx.min(), xx.max(), 10))
-    #ax.set_yticks(np.linspace(yy.min(), yy.max(), 10))
+    ax.coastlines(color='white', linewidth=1.0, zorder=1)
+    #ax.set_xticks(np.linspace(xx.min(), xx.max(), 5))
+    #ax.set_yticks(np.linspace(yy.min(), yy.max(), 5))
 
-    cbar_ax = fig.add_axes([0.9, 0.15, 0.03, 0.7])
-    clb = fig.colorbar(im, cax=cbar_ax)
-    clb.set_label(var_label)
+    # Add Colorbar
+    #cbar_ax = fig.add_axes([0.91, 0.15, 0.03, 0.7])
+    #clb = fig.colorbar(im, cax=cbar_ax)
+    #clb.set_label(var_label)
     #plt.suptitle(ch)
     #plt.tight_layout()
 
     plt.savefig(os.path.join(figs_path, 'tfrec_fullgrid_' + ch + '.eps'), format='eps')
+    plt.savefig(os.path.join(figs_path, 'tfrec_fullgrid_' + ch + '.png'))
     #plt.show()
     plt.close()
 
