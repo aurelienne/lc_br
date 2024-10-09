@@ -9,7 +9,7 @@
 # If you have priority to salvador, you can remove a comment from the next line
 ##SBATCH -w r740-105-19
 #SBATCH --partition=salvador #--exclude gustav
-##SBATCH -w gustav
+#SBATCH -w gustav
 ##SBATCH --nodes=1-1
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=6
@@ -34,4 +34,6 @@ source /etc/profile
 
 # Run script
 #/usr/bin/time -v
-singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_fit_LCfull.py -m /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/lc_fit_full/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_fit_LCfull.py -m /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/lr10-4/fit_full_3/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_fit_LCfull.py -m /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/lr10-4/fit_full_subset0.75_3/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/ -tf /home/ajorge/lc_br/data/subset_train_list_0.75_1.txt
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_finetune.py -m /home/ajorge/lc_br/data/results/fit_full_subset1.0/model-48-0.069863.h5 -o /home/ajorge/lc_br/data/results/fit_full_subset1.0_cont/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/ -lr 0.000000001 -l full  # Continuation of Full Fit must be done with finetuning code

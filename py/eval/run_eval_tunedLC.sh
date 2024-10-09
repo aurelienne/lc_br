@@ -9,7 +9,7 @@
 # If you have priority to salvador, you can remove a comment from the next line
 ##SBATCH -w r740-105-19
 #SBATCH --partition=salvador #--exclude gustav
-#SBATCH -w gustav
+##SBATCH -w gustav
 ##SBATCH --nodes=1-1
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=6
@@ -34,8 +34,17 @@ source /etc/profile
 
 # Run script
 #/usr/bin/time -v
-#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/models/ft_w1.0_1stEncLastDec.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/results/eval_2021_finetuned_w1.0_1stEncLastDec/
-#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/fine_tune_w1.0/Enc_Bot/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_EncBot/
-#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/conv2d_16/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_subset0.10_w1.0_LastDec/ -s
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/Bot/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_Bot
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/conv2d_8/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_BotDec
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/1stEnc_LastDec/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_1stEnc_LastDec
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/Enc_Bot/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_EncBot/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/conv2d_16/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_LastDec/ 
 #singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/fine_tune_w1.0/full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_Full/
-singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_Full_20211110/ -s
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_Full/ -s
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fit_full_subset0.10/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/fitFull_w1.0_subset0.10/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fit_full_subset0.25/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/fitFull_w1.0_subset0.25/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fit_full_subset0.75/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/fitFull_w1.0_subset0.75/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fit_full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/fitFull_w1.0/
+
+# Eval with extra test samples
+singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_eval2.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/tuned_LC_w1.0_Full_extra/

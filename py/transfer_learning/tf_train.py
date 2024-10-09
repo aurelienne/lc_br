@@ -316,19 +316,19 @@ class TimeHistory(Callback):
         logs['time'] = self.times[-1]
 
 #------------------------------------------------------------------------------------------------
-def prepare_dataset(train_filenames, val_filenames, pos_weight_):
+def prepare_dataset(train_filenames, val_filenames, pos_weight_, batchsize):
     print('\nBuilding training Dataset')
-    AUTOTUNE=tf.data.AUTOTUNE
-    BATCHSIZE = 4
     global POS_WEIGHT
     POS_WEIGHT = pos_weight_
+    AUTOTUNE=tf.data.AUTOTUNE
 
     n_tsamples = len(train_filenames)
+    print(f"Training samples: {n_tsamples}")
     train_ds = (tf.data.TFRecordDataset(train_filenames, num_parallel_reads=AUTOTUNE)
                .shuffle(10)
                .map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
                .map(prepare_sample, num_parallel_calls=AUTOTUNE)
-               .batch(BATCHSIZE)
+               .batch(batchsize)
                .prefetch(AUTOTUNE)
     )
 
@@ -337,10 +337,11 @@ def prepare_dataset(train_filenames, val_filenames, pos_weight_):
     print('\nBuilding validation Dataset')
 
     n_vsamples = len(val_filenames)
+    print(f"Validation samples: {n_vsamples}")
     val_ds = (tf.data.TFRecordDataset(val_filenames, num_parallel_reads=AUTOTUNE)
            .map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
            .map(prepare_sample, num_parallel_calls=AUTOTUNE)
-           .batch(BATCHSIZE)
+           .batch(batchsize)
            .prefetch(AUTOTUNE)
     )
 
@@ -427,7 +428,7 @@ def train(input_model, train_ds, val_ds, outdir, NGPU=1):
     training_history_figs(history.history,outdir)
 
     # Delete objects in RAM
-    del train_ds, history, mcp_save, best_model, early_stopping, reduce_lr_loss, callbacks
+    del train_ds, history, mcp_save, early_stopping, reduce_lr_loss, callbacks
 
     # Create scores file
     scores = {}

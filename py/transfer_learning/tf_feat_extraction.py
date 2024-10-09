@@ -25,48 +25,6 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger
 from tensorflow.keras.optimizers import Adam, RMSprop
 from pathlib import Path
 
-parse_desc = """Feature extraction from LightningCast to a new dataset"""
-parser = argparse.ArgumentParser(description=parse_desc)
-parser.add_argument(
-    "-m",
-    "--modeldir",
-    help="Directory containing trained CNN model and config.",
-    type=str,
-    nargs=1,
-)
-parser.add_argument(
-    "-o",
-    "--outdir",
-    help="Output directory. Default={PWD}",
-    nargs=1,
-    type=str,
-)
-parser.add_argument(
-    "-t", "--train_datadir", help="Dataset directory used for fine-tuning the model with training dataset",
-    type=str,
-    nargs=1,
-    required=True,
-)
-parser.add_argument(
-    "-v", "--val_datadir", help="Dataset directory used for fine-tuning the model with validation dataset",
-    type=str,
-    nargs=1,
-    required=True,
-)
-
-args = parser.parse_args()
-
-modeldir = args.modeldir[0]
-train_dir = args.train_datadir[0]
-val_dir = args.val_datadir[0]
-if not args.outdir:
-    outdir = os.environ["PWD"] + "/"
-else:
-    outdir = args.outdir[0]
-
-config = pickle.load(open(os.path.join(modeldir, "model_config.pkl"), "rb"))
-model_file = f"{modeldir}/fit_conv_model.h5"
-
 
 #ncpus = args.ncpus[0]
 ncpus = -1
@@ -230,16 +188,27 @@ def parse_tfrecord_control(example):
 
 ################################################################################################################
 def get_base_model():
-    custom_objs, metrics = get_metrics()
-    conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
-    print("ORIGINAL MODEL:")
-    print(conv_model.summary())
-    print("")
-    #for layer_ in conv_model.layers:
-    #    print(layer_.get_config())
+    if NGPU > 1:
+        # Create a MirroredStrategy.
+        strategy = tf.distribute.MirroredStrategy()
+        print("Number of devices: {}".format(strategy.num_replicas_in_sync))
+        with strategy.scope():
+            custom_objs, metrics = tf_train.get_metrics()
+            conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
+            base_model_out = conv_model.layers[-9].output
+            base_model = keras.Model(inputs = [layer_.input for layer_ in conv_model.layers[:3]], outputs = base_model_out)
+    else:
+        custom_objs, metrics = get_metrics()
+        conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
+        print("Base Architecture for extraction:")
+        print(conv_model.summary())
+        print("")
 
-    base_model_out = conv_model.layers[-9].output
-    base_model = keras.Model(inputs = [layer_.input for layer_ in conv_model.layers[:3]], outputs = base_model_out)
+        custom_objs, metrics = tf_train.get_metrics()
+        conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
+        base_model_out = conv_model.layers[-9].output
+        base_model = keras.Model(inputs = [layer_.input for layer_ in conv_model.layers[:3]], outputs = base_model_out)
+
     return base_model
 
 ################################################################################################################
@@ -258,7 +227,7 @@ def extract_features(ds, outdir):
             write_tfrecords(features[i], targets[i], cter+i, outdir)
         del features
         cter += batchsize
-    #return features, labels
+    return features, labels
 
 def image_feature(value):
     """Returns a bytes_list from a string / byte."""
@@ -280,52 +249,6 @@ def write_tfrecords(features, labels, idx, outdir):
         example = tf.train.Example(features=tf.train.Features(feature=data))
 
         writer.write(example.SerializeToString())
-
-def training_history_figs(history,outdir):
-    '''
-    This function simply makes a couple of figures for how the accuracy and loss
-    changed during training.
-    '''
-
-    # summarize history for accuracy
-    try:
-        plt.plot(history['binary_accuracy'])
-        if('val_binary_accuracy' in history): plt.plot(history['val_binary_accuracy'])
-        plt.title('model binary accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        if('val_binary_accuracy' in history):
-            plt.legend(['train', 'val'], loc='upper left')
-        else:
-            plt.legend(['train'], loc='upper left')
-        plt.savefig(os.path.join(outdir,'binary_accuracy_history.png'))
-        plt.close()
-    except KeyError:
-        plt.plot(history['accuracy'])
-        if('val_accuracy' in history): 
-            plt.plot(history['val_accuracy'])
-            plt.title('model accuracy')
-            plt.ylabel('accuracy')
-            plt.xlabel('epoch')
-        if('val_accuracy' in history):
-            plt.legend(['train', 'val'], loc='upper left')
-        else:
-            plt.legend(['train'], loc='upper left')
-        plt.savefig(os.path.join(outdir,'accuracy_history.png'))
-        plt.close()
-        
-    # summarize history for loss
-        plt.plot(history['loss'])
-        if('val_loss' in history): 
-            plt.plot(history['val_loss'])
-            plt.title('model loss')
-            plt.ylabel('loss')
-            plt.xlabel('epoch')
-        if('val_loss' in history):
-            plt.legend(['train', 'val'], loc='upper left')
-        else:
-            plt.legend(['train'], loc='upper left')
-            plt.savefig(os.path.join(outdir,'loss_history.png'))
 
 def add_scores_to_file(outdir,scores={'val_aupr':{'best_score':0},'val_brier_score':{'best_score':1}}):
   '''
@@ -397,37 +320,49 @@ def get_best_model(outdir):
 
 ################################################################################################################
 ## MAIN ##
+if __name__ == "__main__":
+    print("Feature Extraction...")
+    parse_desc = """Perform feature extraction from a U-Net model. The user must specify the reference layer from which the feature maps will be extracted."""
+
+    parser = argparse.ArgumentParser(description=parse_desc)
+    parser.add_argument(
+        "-m", "--model_file",
+        help="Pre-trained model to be loaded.",
+        type=str,
+        nargs=1,
+        required=True,
+    )
+    parser.add_argument(
+        "-l", "--layer_name",
+        help="Layer name from which the feature maps will be extracted.",
+        type=str,
+        nargs=1,
+        required=True,
+    )
+    parser.add_argument(
+        "-o", "--outdir", help="Output directory. Default = ${PWD}",
+        type=str,
+        nargs=1,
+    )
+    parser.add_argument(
+        "-d", "--datadir", help="Dataset directory used for fine-tuning the model with training dataset",
+        type=str,
+        nargs=1,
+        required=True,
+    )
+
+    args = parser.parse_args()
+
+    input_model = args.model_file[0]
+    print("Model: "+input_model)
+    layername = args.layer_name[0]
+    datadir = args.datadir()
 
 
-# Load model and set up GPUs
-if NGPU > 1:
-    # Create a MirroredStrategy.
-    strategy = tf.distribute.MirroredStrategy()
-    print("Number of devices: {}".format(strategy.num_replicas_in_sync))
-    with strategy.scope():
-        #custom_objs, metrics = get_metrics()
-        #conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
-        base_model = get_base_model()
-else:
     base_model = get_base_model()
 
-print(base_model.summary())
+    AUTOTUNE = tf.data.AUTOTUNE
 
-
-AUTOTUNE = tf.data.AUTOTUNE
-
-# Training Dataset
-train_filenames = glob.glob(train_dir + "/*/*.tfrec", recursive=True)
-n_samples = len(train_filenames)
-print("\nNumber of training samples:", n_samples, "\n")
-train_ds = (tf.data.TFRecordDataset(train_filenames, num_parallel_reads=AUTOTUNE)
-               .shuffle(10)
-               .map(parse_tfrecord_control, num_parallel_calls=AUTOTUNE)
-               .batch(batchsize)
-               .prefetch(AUTOTUNE)
-)
-
-# Validation Dataset
 val_filenames = glob.glob(val_dir + "/*/*.tfrec", recursive=True)
 n_vsamples = len(val_filenames)
 print("\nNumber of validation samples:", n_vsamples, "\n")
@@ -438,66 +373,11 @@ val_ds = (tf.data.TFRecordDataset(val_filenames, num_parallel_reads=AUTOTUNE)
 )
 
 
-# Get remainder dataset
-#_, amt_to_add = make_divisible(n_samples, batchsize, NGPU)
-##    assert (
-##        amt_to_add / n_samples < 0.01
-##    )  # make sure we're not duplicating too many samples
-#remainder_ds = train_ds.take(amt_to_add)
-# Concatenate to test_ds
-#train_ds = train_ds.concatenate(remainder_ds)
-
-#train_ds = (
-#    train_ds.map(parse_tfrecord_control, num_parallel_calls=AUTOTUNE)
-#    .batch(batchsize)  # Don't batch if making numpy arrays
-#    .prefetch(AUTOTUNE)
-#)
-
-# Disable AutoShard.
-#options = tf.data.Options()
-#options.experimental_distribute.auto_shard_policy = (
-#    tf.data.experimental.AutoShardPolicy.OFF
-#)
-#train_ds = train_ds.with_options(options)
 
 # Make predictions to extract features
-train_outdir = os.path.join(outdir, 'train')
-val_outdir = os.path.join(outdir, 'val')
 
-# Appending Layers to the Base Model
-base_model.trainable = False
-conv = tf.keras.layers.Conv2D(16, (3,3), padding='same', name='conv2D_16')(base_model.output)
-conv = tf.keras.layers.Activation('relu', name='Activation_16')(conv)
-conv = tf.keras.layers.Conv2D(16, (3,3), padding='same', name='conv2D_17')(conv)
-#conv = tf.keras.layers.BatchNormalization()(conv)
-conv = tf.keras.layers.Activation('relu', name='Activation_17')(conv)
-conv = tf.keras.layers.Conv2D(1, (1,1), padding='valid',  name='conv2D_18', bias_initializer='zeros')(conv)
-conv = tf.keras.layers.Activation('sigmoid', name='Activation_18')(conv)
-pool_2d_layer = tf.keras.layers.MaxPool2D(pool_size=(4, 4), strides=None, name="MaxPool_Output")(conv)
-pool_2d_layer._name = "MaxPool_Output"
-new_model = tf.keras.Model(base_model.input, pool_2d_layer)
-custom_objs, metrics = get_metrics()
-#optimizer=Adam(learning_rate=1e-4)
-optimizer = RMSprop(lr=2e-5)
-print("Optimizer: "+str(optimizer))
-new_model.compile(optimizer=optimizer, loss="binary_crossentropy", metrics=metrics)
-print(new_model.summary(show_trainable=True))
-
-
-early_stopping = EarlyStopping(monitor='val_loss', patience=3) # If no improvement after {patience} epochs, the stop early
-mcp_save = ModelCheckpoint(os.path.join(outdir,'model-{epoch:02d}-{val_loss:03f}.h5'),save_best_only=True, monitor='val_loss', mode='min')
-reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', cooldown=1, verbose=1, min_delta=0.00001,factor=0.1, patience=2, mode='min')
-callbacks = [early_stopping, mcp_save, reduce_lr_loss] #, csvlogger]
-history = new_model.fit(train_ds,
-          verbose=1,
-          epochs=100,
-          validation_data=val_ds,
-          callbacks=callbacks)
-
-training_history_figs(history.history,outdir)
 
 # Delete objects in RAM
-del train_ds, val_ds, history
 
 # Create scores file
 scores = {}

@@ -384,8 +384,7 @@ inroot = f"/ships22/grain/ajorge/data/tfrecs_sumglm/test/{year}/"
 #inroot = f"/ships22/grain/probsevere/LC/tfrecs3/goes16/{year}"
 
 # leave empty if you only want one run
-#subdirs = ['01', '02','03','04','09', '10', '11','12']
-subdirs = []
+subdirs = ['01', '02','03','04','09', '10', '11','12']
 
 if len(subdirs) > 0:
     val_lists = []
