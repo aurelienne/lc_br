@@ -8,7 +8,8 @@ import sys
 import pickle
 
 prefix_path = '/home/ajorge/lc_br/data/results/eval/'
-models = ['original_LC', 'tuned_LC_w1.0_Full']
+#models = ['original_LC', 'tuned_LC_w1.0_Full']
+models = ['original_LC', 'fine_tune/full']
 metric = 'aupr'
 
 boxplots = []
@@ -29,3 +30,10 @@ plt.xticks(range(1, len(models)+1), models)
 plt.ylabel(metric)
 plt.savefig('boxplots.png')
 plt.close()
+
+print("1Qt:", np.percentile(boxplots, 25))
+print("Median:", np.percentile(boxplots, 50))
+print("3Qt:", np.percentile(boxplots, 75))
+print("Min:", np.min(boxplots))
+print("Max:", np.max(boxplots))
+print("Mean:", np.mean(boxplots))
