@@ -17,7 +17,7 @@ These datasets are available at:
 
 ## Environment Installation
 - Python libs (yaml file for conda)...
-- Install glmtools...
+- Install [glmtools](https://github.com/deeplycloudy/glmtools)
 
 ## How to Use
 ### Data Pre-processing
