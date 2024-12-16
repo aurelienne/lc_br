@@ -21,7 +21,7 @@ The data sources can be freely obtained from NOAA’s Comprehensive Large Array 
 ## Environment Installation
 - Install [glmtools](https://github.com/deeplycloudy/glmtools);
 - Activate the created conda environment;
-- Install additional packages: `bzip2`, *cartopy*, hdf4, hdf5, matplotlib, netcdf4, numpy, pandas, openssl, scikit-learn, tensorflow, xarray, yaml.
+- Install additional packages: `bzip2`, `cartopy`, `hdf4`, `hdf5`, `matplotlib`, `netcdf4`, `numpy`, `pandas`, `openssl`, `scikit-learn`, `tensorflow`, `xarray`, `yaml`.
    
 ## How to Use
 ### Data Pre-processing
