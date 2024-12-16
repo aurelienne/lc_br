@@ -65,17 +65,26 @@ python check_TFRecords.py
 python plot_TFRecords.py
 ```
 ### Fine-Tuning
-The training samples used by the fine-tuning process can be pointed through a text file containing the full path of each sample, or pointing to an entire training directory.
+The fine-tuning process can use training samples specified either through a text file listing the full path of each sample (`-tf`) or by pointing to an entire training directory (`-t`):
 ```
 python tf_finetune.py -m <h5_model_file> -l <layer_name> -o <output_directory> -tf <train_file_list> -v <validation_folder>
+```
+OR
+```
+python tf_finetune.py -m <h5_model_file> -l <layer_name> -o <output_directory> -t <train_dir> -v <validation_folder>
 ```
 Example:
 ```
 python tf_finetune.py -m /home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5 -l conv2d_8 -o /home/ajorge/lc_br/data/results/fine_tune_subset0.75/ -tf /home/ajorge/lc_br/data/subset_train_list_0.75_2.txt -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
 ```
-### Feature Extraction
+
 ### Evaluation
+For evaluation, one should indicate the model file (H5 format; option `-m`), the input directory with the config file (option `-i`), and the output directory (option `-o`):
+```
+python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fit_full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/fitFull_w1.0/
+```
 
 ## Credits
+This project reuses and adapt part of the code of the original [LC Model](https://gitlab.ssec.wisc.edu/jcintineo/lightningcast/).
 
 ## License
