@@ -11,9 +11,12 @@ Originally developed for fine-tuning LC for the Brazilian territory, this projec
 
 ## Required Dataset
 The model uses data from four different channels from GOES-16 ABI as input, and from the Geostationary Lightning Mapper (GLM) as target/truth.
-These datasets are available at:
-- GOES-ABI channels: ...
-- GLM-Level2: ...
+- GOES-ABI channels: GOES-16 ABI 0.64-μm Reflectance (CH02) 0.5 km 10 minutes
+                     GOES-16 ABI 1.6-μm Reflectance (CH05) 1 km 10 minutes
+                     GOES-16 ABI 10.3-μm Brightness Temp. (CH13) 2 km 10 minutes
+                     GOES-16 ABI 12.3-μm Brightness Temp. (CH15)
+- GLM-Level2
+The data sources can be freely obtained from NOAA’s Comprehensive Large Array Data Stewardship System (https://www.class.noaa.gov/CLASS).
 
 ## Environment Installation
 - Python libs (yaml file for conda)...
@@ -62,6 +65,14 @@ python check_TFRecords.py
 python plot_TFRecords.py
 ```
 ### Fine-Tuning
+The training samples used by the fine-tuning process can be pointed through a text file containing the full path of each sample, or pointing to an entire training directory.
+```
+python tf_finetune.py -m <h5_model_file> -l <layer_name> -o <output_directory> -tf <train_file_list> -v <validation_folder>
+```
+Example:
+```
+python tf_finetune.py -m /home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5 -l conv2d_8 -o /home/ajorge/lc_br/data/results/fine_tune_subset0.75/ -tf /home/ajorge/lc_br/data/subset_train_list_0.75_2.txt -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+```
 ### Feature Extraction
 ### Evaluation
 
