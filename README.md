@@ -19,9 +19,10 @@ The model uses data from four different channels from GOES-16 ABI as input, and 
 The data sources can be freely obtained from NOAA’s Comprehensive Large Array Data Stewardship System (https://www.class.noaa.gov/CLASS).
 
 ## Environment Installation
-- Python libs (yaml file for conda)...
-- Install [glmtools](https://github.com/deeplycloudy/glmtools)
-
+- Install [glmtools](https://github.com/deeplycloudy/glmtools);
+- Activate the created conda environment;
+- Install additional packages: `bzip2`, *cartopy*, hdf4, hdf5, matplotlib, netcdf4, numpy, pandas, openssl, scikit-learn, tensorflow, xarray, yaml.
+   
 ## How to Use
 ### Data Pre-processing
 1. Adjust paths and other parameters at the `PREPROC` section in the `config.ini` file.
