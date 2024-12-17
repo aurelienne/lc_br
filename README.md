@@ -82,6 +82,10 @@ python tf_finetune.py -m /home/ajorge/src/lightningcast-master/lightningcast/sta
 ### Evaluation
 For evaluation, one should indicate the model file (H5 format; option `-m`), the input directory with the config file (option `-i`), and the output directory (option `-o`):
 ```
+python tf_eval.py -m <model_file> -i <config_path> -o <output_dir>
+```
+Example:
+```
 python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fit_full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/fitFull_w1.0/
 ```
 
