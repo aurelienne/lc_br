@@ -4,10 +4,11 @@ input_path='/ships22/grain/ajorge/data/glm_grids_1min_extra/grids/'
 output_path='/ships22/grain/ajorge/data/glm_grids_60min_extra/'
 YY=$1
 mm=$2
-dd=(14 15 16 17 18 19)
+#dd=(14 15 16 17 18 19)
+dd=11
 
-start_hour=1900
-end_hour=2200
+start_hour=1800
+end_hour=2359
 
 for dd in ${dd[*]}; do
     dt=$(date -d "$YY$mm$dd ${start_hour}")
