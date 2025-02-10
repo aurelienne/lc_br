@@ -11,14 +11,18 @@ Originally developed for fine-tuning LC for the Brazilian territory, this projec
 
 ## Required Dataset
 The model uses data from four different channels from GOES-16 ABI as input, and from the Geostationary Lightning Mapper (GLM) as target/truth.
-These datasets are available at:
-- GOES-ABI channels: ...
-- GLM-Level2: ...
+- GOES-ABI channels: GOES-16 ABI 0.64-μm Reflectance (CH02) 0.5 km 10 minutes
+                     GOES-16 ABI 1.6-μm Reflectance (CH05) 1 km 10 minutes
+                     GOES-16 ABI 10.3-μm Brightness Temp. (CH13) 2 km 10 minutes
+                     GOES-16 ABI 12.3-μm Brightness Temp. (CH15)
+- GLM-Level2
+The data sources can be freely obtained from NOAA’s Comprehensive Large Array Data Stewardship System (https://www.class.noaa.gov/CLASS).
 
 ## Environment Installation
-- Python libs (yaml file for conda)...
-- Install glmtools...
-
+- Install [glmtools](https://github.com/deeplycloudy/glmtools);
+- Activate the created conda environment;
+- Install additional packages: `bzip2`, `cartopy`, `hdf4`, `hdf5`, `matplotlib`, `netcdf4`, `numpy`, `pandas`, `openssl`, `scikit-learn`, `tensorflow`, `xarray`, `yaml`.
+   
 ## How to Use
 ### Data Pre-processing
 1. Adjust paths and other parameters at the `PREPROC` section in the `config.ini` file.
@@ -62,9 +66,30 @@ python check_TFRecords.py
 python plot_TFRecords.py
 ```
 ### Fine-Tuning
-### Feature Extraction
+The fine-tuning process can use training samples specified either through a text file listing the full path of each sample (`-tf`) or by pointing to an entire training directory (`-t`):
+```
+python tf_finetune.py -m <h5_model_file> -l <layer_name> -o <output_directory> -tf <train_file_list> -v <validation_folder>
+```
+OR
+```
+python tf_finetune.py -m <h5_model_file> -l <layer_name> -o <output_directory> -t <train_dir> -v <validation_folder>
+```
+Example:
+```
+python tf_finetune.py -m /home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5 -l conv2d_8 -o /home/ajorge/lc_br/data/results/fine_tune_subset0.75/ -tf /home/ajorge/lc_br/data/subset_train_list_0.75_2.txt -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+```
+
 ### Evaluation
+For evaluation, one should indicate the model file (H5 format; option `-m`), the input directory with the config file (option `-i`), and the output directory (option `-o`):
+```
+python tf_eval.py -m <model_file> -i <config_path> -o <output_dir>
+```
+Example:
+```
+python tf_eval.py -m /home/ajorge/lc_br/data/results/lr10-4/fit_full/fit_conv_model.h5 -i /home/ajorge/src/lightningcast-master/lightningcast/static -o /home/ajorge/lc_br/data/results/eval/fitFull_w1.0/
+```
 
 ## Credits
+This project reuses and adapt part of the code of the original [LC Model](https://gitlab.ssec.wisc.edu/jcintineo/lightningcast/).
 
 ## License
