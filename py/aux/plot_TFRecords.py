@@ -172,7 +172,7 @@ def plot_entire_grid(ch):
     # Figure Size with colorbar
     #ax = fig.add_axes([0, 0, 0.90, 1], projection=geoproj)
     # Figure Size without colorbar
-    ax = fig.add_axes([0, 0, 1, 1], projection=geoproj)
+    ax = fig.add_axes([0, 0, 0.87, 1], projection=geoproj)
     extent = [xx.min(), xx.max(), yy.min(), yy.max()]
     ax.set_extent(extent, crs=geoproj)
     #ax.set_extent(extent, crs=target_crs)
@@ -216,9 +216,10 @@ def plot_entire_grid(ch):
     #ax.set_yticks(np.linspace(yy.min(), yy.max(), 5))
 
     # Add Colorbar
-    #cbar_ax = fig.add_axes([0.91, 0.15, 0.03, 0.7])
-    #clb = fig.colorbar(im, cax=cbar_ax)
-    #clb.set_label(var_label)
+    cbar_ax = fig.add_axes([0.88, 0.15, 0.03, 0.7])
+    clb = fig.colorbar(im, cax=cbar_ax)
+    clb.set_label(var_label, fontsize=16)
+    cbar_ax.tick_params(labelsize=14)
     #plt.suptitle(ch)
     #plt.tight_layout()
 
