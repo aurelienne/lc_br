@@ -15,6 +15,8 @@ import pyproj
 
 NY, NX = 2100, 2100
 ny, nx = 700, 700
+nyf, nxf = 175, 175
+nfilters = 256
 
 figs_path = '/home/ajorge/lc_br/figs/'
 
@@ -30,7 +32,7 @@ def parse_tfrecord_fn(example):
     example = {}
 
     image = tf.io.parse_tensor(features["input"], tf.float32)
-    image = tf.reshape(image, [ny,nx])
+    image = tf.reshape(image, [nyf,nxf,nfilters])
     example['input'] = image
 
     image = tf.io.parse_tensor(features["target"], tf.float32)
@@ -59,17 +61,29 @@ def plot_single_patch():
     raw_dataset = tf.data.TFRecordDataset(tfrec1)
     parsed_dataset = raw_dataset.map(parse_tfrecord_fn)
 
+    l = 0
     for features in parsed_dataset.take(1):
 
         fig,axes = plt.subplots(nrows=4,ncols=2,figsize=(6, 12))
         #for ii,ax in enumerate(axes.ravel()):
         #    ax.axis('off')
-        im = axes[l,0].imshow(features['input'].numpy(), interpolation='none', cmap=plt.get_cmap('Greys_r'))
-        #im = axes[l,1].imshow(features['input'].numpy(), interpolation='none', cmap=plt.get_cmap('Greys_r'))
-        l = l + 1
+        print(features['input'].numpy().shape)
+        im = axes[0, 0].imshow(features['input'].numpy()[:,:,0], interpolation='none', cmap=plt.get_cmap('Greys_r'))
+        im = axes[1, 0].imshow(features['input'].numpy()[:,:,1], interpolation='none', cmap=plt.get_cmap('Greys_r'))
+        im = axes[2, 0].imshow(features['input'].numpy()[:,:,2], interpolation='none', cmap=plt.get_cmap('Greys_r'))
+        im = axes[3, 0].imshow(features['input'].numpy()[:,:,3], interpolation='none', cmap=plt.get_cmap('Greys_r'))
+
+    raw_dataset2 = tf.data.TFRecordDataset(tfrec2)
+    parsed_dataset2 = raw_dataset2.map(parse_tfrecord_fn)
+
+    for features2 in parsed_dataset2.take(1):
+        im = axes[0, 1].imshow(features2['input'].numpy()[:,:,0], interpolation='none', cmap=plt.get_cmap('Greys_r'))
+        im = axes[1, 1].imshow(features2['input'].numpy()[:,:,1], interpolation='none', cmap=plt.get_cmap('Greys_r'))
+        im = axes[2, 1].imshow(features2['input'].numpy()[:,:,2], interpolation='none', cmap=plt.get_cmap('Greys_r'))
+        im = axes[3, 1].imshow(features2['input'].numpy()[:,:,3], interpolation='none', cmap=plt.get_cmap('Greys_r'))
 
     plt.tight_layout()
-    plt.savefig(os.path.join(figs_path, 'patch_channels.png'))
+    plt.savefig(os.path.join(figs_path, 'patch_featMap_Bottleneck.png'))
     plt.clf()
     plt.close()
 
