@@ -24,6 +24,7 @@ import collections
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam, RMSprop
 from pathlib import Path
+import tf_train
 
 
 #ncpus = args.ncpus[0]
@@ -187,56 +188,57 @@ def parse_tfrecord_control(example):
 
 
 ################################################################################################################
-def get_base_model():
-    if NGPU > 1:
-        # Create a MirroredStrategy.
-        strategy = tf.distribute.MirroredStrategy()
-        print("Number of devices: {}".format(strategy.num_replicas_in_sync))
-        with strategy.scope():
-            custom_objs, metrics = tf_train.get_metrics()
-            conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
-            base_model_out = conv_model.layers[-9].output
-            base_model = keras.Model(inputs = [layer_.input for layer_ in conv_model.layers[:3]], outputs = base_model_out)
-    else:
-        custom_objs, metrics = get_metrics()
-        conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
-        print("Base Architecture for extraction:")
-        print(conv_model.summary())
-        print("")
+def get_base_model(model_file, layername):
+    #if NGPU > 1:
+    #    # Create a MirroredStrategy.
+    #    strategy = tf.distribute.MirroredStrategy()
+    #    print("Number of devices: {}".format(strategy.num_replicas_in_sync))
+    #    with strategy.scope():
+    print("get_base_model")
+    custom_objs, metrics = get_metrics()
+    conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
 
-        custom_objs, metrics = tf_train.get_metrics()
-        conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
-        base_model_out = conv_model.layers[-9].output
-        base_model = keras.Model(inputs = [layer_.input for layer_ in conv_model.layers[:3]], outputs = base_model_out)
+    custom_objs, metrics = tf_train.get_metrics()
+    conv_model = load_model(model_file, custom_objects=custom_objs, compile=False)
+    print(conv_model.summary())
+    id_layer = -1
+    for layer in conv_model.layers[::-1]:
+        print(layer.name)
+        if layer.name == layername:
+            break
+        else:
+            id_layer = id_layer - 1
+    print("id_layer", id_layer)
+    base_model_out = conv_model.layers[id_layer].output
+    base_model = keras.Model(inputs = [layer_.input for layer_ in conv_model.layers[:3]], outputs = base_model_out)
+    print(base_model.summary())
 
     return base_model
 
 ################################################################################################################
-def extract_features(ds, outdir):
+def extract_features(ds, filenames, outdir):
     ny, nx = 700, 700
-    #nfilters = 16 # Filters of Conv2D_17
-    nfilters = 32 # Filters of Conv2D_17
 
     cter = 0
     for inputs,targets in ds:
         features = base_model.predict(inputs)
+        print(features.shape)
         batchsize = features.shape[0]
         for i in range(batchsize):
             print(features[i].shape)
             print(targets[i].shape)
-            write_tfrecords(features[i], targets[i], cter+i, outdir)
+            write_tfrecords(features[i], targets[i], cter+i, outdir, os.path.basename(filenames[cter+i]))
         del features
         cter += batchsize
-    return features, labels
 
 def image_feature(value):
     """Returns a bytes_list from a string / byte."""
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value.numpy()]))
     #return tf.train.Feature(float_list=tf.train.FloatList(value=[value.numpy()]))
 
-def write_tfrecords(features, labels, idx, outdir):
+def write_tfrecords(features, labels, idx, outdir, fname):
     Path(outdir).mkdir(parents=True, exist_ok=True)
-    outfile = f"{outdir}/lc_br_{idx}.tfrec"
+    outfile = f"{outdir}/lc_br_{fname}.tfrec"
 
     with tf.io.TFRecordWriter(outfile) as writer:
         inputs = tf.io.serialize_tensor(tf.convert_to_tensor(features))
@@ -356,43 +358,21 @@ if __name__ == "__main__":
     input_model = args.model_file[0]
     print("Model: "+input_model)
     layername = args.layer_name[0]
-    datadir = args.datadir()
+    datadir = args.datadir[0]
+    outdir = args.outdir[0]
 
-
-    base_model = get_base_model()
+    base_model = get_base_model(input_model, layername)
 
     AUTOTUNE = tf.data.AUTOTUNE
 
-val_filenames = glob.glob(val_dir + "/*/*.tfrec", recursive=True)
-n_vsamples = len(val_filenames)
-print("\nNumber of validation samples:", n_vsamples, "\n")
-val_ds = (tf.data.TFRecordDataset(val_filenames, num_parallel_reads=AUTOTUNE)
+    filenames = sorted(glob.glob(datadir + "/*/*.tfrec", recursive=True))
+    ds = (tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
        .map(parse_tfrecord_control, num_parallel_calls=AUTOTUNE)
        .batch(batchsize)
-       .prefetch(AUTOTUNE)
-)
-
+       .prefetch(AUTOTUNE))
 
 
 # Make predictions to extract features
-
+extract_features(ds, filenames, outdir)
 
 # Delete objects in RAM
-
-# Create scores file
-scores = {}
-scores['val_aupr'] = {'best_score':0}
-scores['val_brier_score'] = {'best_score':1}
-scores['val_csi05'] = {'best_score':0}
-scores['val_csi10'] = {'best_score':0}
-scores['val_csi15'] = {'best_score':0}
-scores['val_csi20'] = {'best_score':0}
-scores['val_csi25'] = {'best_score':0}
-scores['val_csi30'] = {'best_score':0}
-scores['val_csi35'] = {'best_score':0}
-scores['val_csi40'] = {'best_score':0}
-scores['val_csi45'] = {'best_score':0}
-scores['val_csi50'] = {'best_score':0}
-
-add_scores_to_file(outdir,scores=scores)
-

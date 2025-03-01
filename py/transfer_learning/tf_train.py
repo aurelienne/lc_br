@@ -386,6 +386,7 @@ def set_trainable_layers(model, layername):
 def train(input_model, train_ds, val_ds, outdir, NGPU=1):
     
     print(input_model.summary(show_trainable=True))
+    sys.exit()
 
     # Callbacks
     csvlogger = CSVLogger(f"{outdir}/log.csv", append=True)

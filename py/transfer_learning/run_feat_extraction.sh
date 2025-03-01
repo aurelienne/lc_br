@@ -34,4 +34,5 @@ source /etc/profile
 
 # Run script
 #/usr/bin/time -v
-singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_feat_extraction.py -m /home/ajorge/src/lightningcast-master/lightningcast/static -o /ships22/grain/ajorge/data/results/lc_feat_extraction_RMSprop/ -t /ships22/grain/ajorge/data/tfrecs_sumglm/train/2020/ -v /ships22/grain/ajorge/data/tfrecs_sumglm/val/2020/
+#singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_feat_extraction.py -m /home/ajorge/lc_br/data/results/lr10-4/fine_tune/full/fit_conv_model.h5 -l activation_9 -o /ships22/grain/ajorge/data/results/lc_feat_extraction_Bot/ -d /ships22/grain/ajorge/data/tfrecs_sumglm/test/2021/
+singularity run -B /ships22 -B /ships19 -B $HOME/local-TF:$HOME/miniconda3 --nv $CONTAINER python tf_feat_extraction.py -m /home/ajorge/src/lightningcast-master/lightningcast/static/fit_conv_model.h5 -l activation_9 -o /ships22/grain/ajorge/data/results/lc_feat_extraction_Bot_OriginalModel/ -d /ships22/grain/ajorge/data/tfrecs_sumglm/test/2021/
